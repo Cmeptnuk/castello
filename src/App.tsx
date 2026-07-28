@@ -254,15 +254,8 @@ function App() {
   const products = useCountUp(30, 2000, statsVisible)
 
   useEffect(() => {
-    const isTouch = 'ontouchstart' in window
-    const lenis = new Lenis({
-      duration: isTouch ? 0.5 : 1.8,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      wheelMultiplier: 0.8,
-      touchMultiplier: isTouch ? 0.8 : 1.2,
-      lerp: isTouch ? 0.15 : 0.08,
-      syncTouch: isTouch,
-    })
+    if ('ontouchstart' in window) return
+    const lenis = new Lenis({ duration: 1.8, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), wheelMultiplier: 0.8, lerp: 0.08 })
     const raf = (t: number) => { lenis.raf(t); requestAnimationFrame(raf) }
     requestAnimationFrame(raf)
     return () => lenis.destroy()
