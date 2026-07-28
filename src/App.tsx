@@ -146,18 +146,18 @@ function TiltCard({ children, className, style }: { children: React.ReactNode; c
 
 function PriceGrid({ items, filler, tabKey }: { items: PriceItem[]; filler?: { label: string; desc: string }; tabKey: string }) {
   return (
-    <div key={tabKey} className="grid grid-cols-2 lg:grid-cols-4 gap-3 animate-fade-in">
+    <div key={tabKey} className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 animate-fade-in">
       {items.map((item, i) => (
         <TiltCard
           key={`${item.priceUSD}-${i}`}
-          className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-4 flex items-center justify-between sm:flex-col sm:text-center gap-x-4 gap-y-2 animate-fade-in group cursor-pointer hover:bg-white/[0.06] hover:border-white/15 transition-all duration-200 ease-out will-change-transform"
+          className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-3 sm:p-4 flex items-center justify-between sm:flex-col sm:text-center gap-x-3 sm:gap-x-4 gap-y-1.5 sm:gap-y-2 animate-fade-in group cursor-pointer hover:bg-white/[0.06] hover:border-white/15 transition-all duration-200 ease-out will-change-transform"
           style={{ animationDelay: `${i * 0.06}s` }}
         >
-          <a href="https://t.me/CastelloShop_bot" target="_blank" rel="noopener noreferrer" className="flex items-center justify-between sm:flex-col sm:text-center gap-x-4 gap-y-2 w-full">
-            <span className="text-sm text-white/60 font-medium group-hover:text-white/80 transition-colors">{item.label}</span>
+          <a href="https://t.me/CastelloShop_bot" target="_blank" rel="noopener noreferrer" className="flex items-center justify-between sm:flex-col sm:text-center gap-x-3 sm:gap-x-4 gap-y-1.5 sm:gap-y-2 w-full">
+            <span className="text-xs sm:text-sm text-white/60 font-medium group-hover:text-white/80 transition-colors">{item.label}</span>
             <div className="text-right sm:text-center">
-              <div className="text-lg font-bold text-white/90">${item.priceUSD}</div>
-              <div className="text-xs text-white/30">{item.priceRUB} ₽</div>
+              <div className="text-base sm:text-lg font-bold text-white/90">${item.priceUSD}</div>
+              <div className="text-[11px] sm:text-xs text-white/30">{item.priceRUB} ₽</div>
             </div>
           </a>
         </TiltCard>
@@ -167,11 +167,11 @@ function PriceGrid({ items, filler, tabKey }: { items: PriceItem[]; filler?: { l
           href="https://t.me/CastelloShop_bot"
           target="_blank"
           rel="noopener noreferrer"
-          className="bg-white/[0.02] border border-dashed border-white/[0.08] rounded-xl p-4 flex flex-col items-center justify-center gap-1 hover:bg-white/[0.05] hover:border-white/15 transition-all duration-300 animate-fade-in group cursor-pointer"
+          className="bg-white/[0.02] border border-dashed border-white/[0.08] rounded-xl p-3 sm:p-4 flex flex-col items-center justify-center gap-1 hover:bg-white/[0.05] hover:border-white/15 transition-all duration-300 animate-fade-in group cursor-pointer"
           style={{ animationDelay: `${items.length * 0.06}s` }}
         >
-          <span className="text-sm font-medium text-white/40 group-hover:text-white/60 transition-colors">{filler.label}</span>
-          <span className="text-xs text-white/20">{filler.desc}</span>
+          <span className="text-xs sm:text-sm font-medium text-white/40 group-hover:text-white/60 transition-colors">{filler.label}</span>
+          <span className="text-[11px] sm:text-xs text-white/20">{filler.desc}</span>
         </a>
       )}
     </div>
