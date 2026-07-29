@@ -3,6 +3,7 @@
 @theme {
   --font-sans: Inter, system-ui, sans-serif;
   --animate-fade-in: fade-in 0.5s ease-out both;
+  --breakpoint-xs: 20rem;
 }
 
 @keyframes fade-in {
@@ -41,4 +42,12 @@ html {
 ::selection {
   background: rgba(255, 255, 255, 0.12);
   color: white;
+}
+
+.slide-viewport .slide-section {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  will-change: opacity;
+  contain: layout style paint;
+  opacity: 0;
 }
