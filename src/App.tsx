@@ -43,6 +43,7 @@ const faqData = [
   { q: 'Нужен ли Discord Nitro для заказа?', a: 'Нет, не обязательно. У нас есть отдельные категории товаров для аккаунтов без Nitro и с Nitro. Выбирай то, что подходит под твой аккаунт.' },
   { q: 'Как быстро я получу товар после оплаты?', a: 'В течение 10–15 минут после подтверждения платежа бот обработает заказ и отправит товар.' },
   { q: 'Что такое «украшения» и «наборы»?', a: 'Украшения — это отдельные элементы для профиля Discord (рамка аватара, баннер, цвет ника и т.д.). Наборы — это комплект из нескольких украшений по выгодной цене.' },
+  { q: 'Как работает возврат?', a: 'Товар возвращается только в случае, если проблема возникла по нашей вине. В остальных случаях возврат не предусмотрен.' },
 ]
 
 type CategoryTab = 'decorations' | 'bundles'
@@ -225,8 +226,10 @@ function App() {
   const [slide, setSlide] = useState(0)
   const [menuOpen, setMenuOpen] = useState(false)
   const [cart, setCart] = useState<PriceItem[]>([])
+  const [cartOpen, setCartOpen] = useState(false)
 
   const onAdd = (item: PriceItem) => setCart(prev => [...prev, item])
+  const removeFromCart = (index: number) => setCart(prev => prev.filter((_, i) => i !== index))
 
   const slideRef = useRef(0)
   const slideNodes = useRef<(HTMLDivElement | null)[]>([])
@@ -247,10 +250,11 @@ function App() {
     entering.style.pointerEvents = 'auto'
     setSlide(idx)
     const key = SLIDE_KEYS[idx]
+    const url = key === 'home' ? '/' : `/${key}`
     if (replace) {
-      window.history.replaceState(null, '', `#${key}`)
+      window.history.replaceState(null, '', url)
     } else {
-      window.history.pushState(null, '', `#${key}`)
+      window.history.pushState(null, '', url)
     }
     const cleanup = () => {
       busyRef.current = false
@@ -278,8 +282,8 @@ function App() {
 
   useEffect(() => {
     const initPath = () => {
-      const hash = window.location.hash.slice(1)
-      const idx = SLIDE_KEYS.indexOf(hash)
+      const path = window.location.pathname.slice(1)
+      const idx = SLIDE_KEYS.indexOf(path)
       const start = idx >= 0 ? idx : 0
       slideRef.current = start
       slideNodes.current.forEach((el, i) => {
@@ -295,19 +299,15 @@ function App() {
         }
       })
       setSlide(start)
-      if (hash !== SLIDE_KEYS[start]) {
-        window.history.replaceState(null, '', `#${SLIDE_KEYS[start]}`)
+      if (path !== SLIDE_KEYS[start]) {
+        const url = SLIDE_KEYS[start] === 'home' ? '/' : `/${SLIDE_KEYS[start]}`
+        window.history.replaceState(null, '', url)
       }
     }
     initPath()
-    window.addEventListener('popstate', () => {
-      const hash = window.location.hash.slice(1)
-      const idx = SLIDE_KEYS.indexOf(hash)
-      if (idx >= 0) goToSlide(idx, true)
-    })
     const handlePop = () => {
-      const hash = window.location.hash.slice(1)
-      const idx = SLIDE_KEYS.indexOf(hash)
+      const path = window.location.pathname.slice(1)
+      const idx = SLIDE_KEYS.indexOf(path)
       if (idx >= 0) goToSlide(idx, true)
     }
     window.addEventListener('popstate', handlePop)
@@ -404,7 +404,7 @@ function App() {
             </svg>
           </a>
           <div className="relative">
-            <button className="w-8 sm:w-9 h-8 sm:h-9 rounded-xl bg-white/[0.06] flex items-center justify-center hover:bg-white/15 transition-colors" title="Корзина">
+            <button onClick={() => setCartOpen(true)} className="w-8 sm:w-9 h-8 sm:h-9 rounded-xl bg-white/[0.06] flex items-center justify-center hover:bg-white/15 transition-colors" title="Корзина">
               <ShoppingCart className="w-5 h-5 text-white/60" />
             </button>
             {cart.length > 0 && (
@@ -415,6 +415,55 @@ function App() {
           </div>
         </div>
       </nav>
+
+      {cartOpen && (
+        <div className="fixed inset-0 z-50 flex justify-end">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setCartOpen(false)} />
+          <div className="relative w-full max-w-sm bg-[#070708] border-l border-white/[0.08] h-full flex flex-col animate-slide-in-right">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
+              <span className="text-sm font-medium text-white/80">Корзина ({cart.length})</span>
+              <button onClick={() => setCartOpen(false)} className="w-7 h-7 rounded-lg bg-white/[0.06] flex items-center justify-center hover:bg-white/15 transition-colors">
+                <X className="w-4 h-4 text-white/60" />
+              </button>
+            </div>
+            {cart.length === 0 ? (
+              <div className="flex-1 flex flex-col items-center justify-center text-white/30 text-sm gap-3">
+                <ShoppingCart className="w-10 h-10 text-white/20" />
+                <span>Корзина пуста</span>
+              </div>
+            ) : (
+              <>
+                <div className="flex-1 overflow-y-auto px-5 py-4 space-y-2">
+                  {cart.map((item, i) => (
+                    <div key={i} className="flex items-center justify-between bg-white/[0.03] border border-white/[0.06] rounded-lg px-4 py-3">
+                      <div>
+                        <div className="text-sm font-medium text-white/80">{item.label}</div>
+                        <div className="text-xs text-white/40">${item.priceUSD} &middot; {item.priceRUB} ₽</div>
+                      </div>
+                      <button onClick={() => removeFromCart(i)} className="w-7 h-7 rounded-lg bg-white/[0.06] flex items-center justify-center hover:bg-white/15 transition-colors shrink-0 ml-3">
+                        <X className="w-3.5 h-3.5 text-white/50" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <div className="border-t border-white/[0.06] px-5 py-4 space-y-3">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-white/50">Итого</span>
+                    <span className="font-semibold text-white">
+                      ${cart.reduce((s, i) => s + i.priceUSD, 0).toFixed(2)}
+                    </span>
+                  </div>
+                  <a href="https://t.me/CastelloShop_bot" target="_blank" rel="noopener noreferrer"
+                    className="block w-full text-center px-4 py-3 bg-white text-[#070708] font-semibold text-sm rounded-xl hover:bg-gray-100 transition-colors"
+                  >
+                    Оформить в Telegram
+                  </a>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       {menuOpen && (
         <div className="fixed inset-0 z-30 sm:hidden bg-[#070708]/95 backdrop-blur-lg flex flex-col items-center justify-center gap-4 animate-fade-in">
@@ -743,11 +792,10 @@ function App() {
                 <h2 className="text-2xl sm:text-3xl font-bold">Готов начать?</h2>
                 <p className="text-white/40 text-sm sm:text-base mt-2">Жми кнопку и выбирай то, что подходит именно тебе.</p>
                 <a href="https://t.me/CastelloShop_bot" target="_blank" rel="noopener noreferrer"
-                  className="group relative inline-flex items-center gap-3 px-8 py-3 sm:py-4 bg-white text-[#070708] font-semibold text-sm sm:text-base rounded-2xl transition-all duration-300 hover:bg-gray-100 hover:scale-[1.03] active:scale-95 mt-4"
+                  className="relative inline-flex items-center gap-3 px-8 py-3 sm:py-4 bg-white text-[#070708] font-semibold text-sm sm:text-base rounded-2xl mt-4"
                 >
-                  <span className="absolute -inset-1 rounded-2xl bg-white/15 opacity-0 blur-lg transition-opacity duration-300 group-hover:opacity-100" />
                   <span className="relative flex items-center gap-3">
-                    <svg className="w-5 h-5 transition-all duration-300 ease-out group-hover:translate-x-1 group-hover:-translate-y-1 group-hover:scale-110 group-hover:rotate-[20deg]" viewBox="0 0 24 24" fill="currentColor">
+                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
                     </svg>
                     Перейти в Telegram-бот
