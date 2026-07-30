@@ -38,12 +38,12 @@ function FaqItem({ q, a, open, onToggle }: { q: string; a: string; open: boolean
 }
 
 const faqData = [
-  { q: 'Как сделать заказ?', a: 'Нажми на кнопку «Перейти в Telegram-бот» — откроется чат с ботом. Выбери нужную категорию, товар и следуй инструкциям. Весь процесс занимает пару минут.' },
-  { q: 'Какие способы оплаты доступны?', a: 'Оплата принимается картами РФ, СБП и криптовалютой (TON, USDT TON/TRC-20, Solana). Все способы доступны внутри Telegram-бота.' },
-  { q: 'Нужен ли Discord Nitro для заказа?', a: 'Нет, не обязательно. У нас есть отдельные категории товаров для аккаунтов без Nitro и с Nitro. Выбирай то, что подходит под твой аккаунт.' },
-  { q: 'Как быстро я получу товар после оплаты?', a: 'В течение 10–15 минут после подтверждения платежа бот обработает заказ и отправит товар.' },
-  { q: 'Что такое «украшения» и «наборы»?', a: 'Украшения — это отдельные элементы для профиля Discord (рамка аватара, баннер, цвет ника и т.д.). Наборы — это комплект из нескольких украшений по выгодной цене.' },
-  { q: 'Как работает возврат?', a: 'Товар возвращается только в случае, если проблема возникла по нашей вине. В остальных случаях возврат не предусмотрен.' },
+  { q: 'Как сделать заказ?', a: 'Нажмите на кнопку «Перейти в Telegram-бот» — откроется чат с ботом. Выберите нужную категорию, товар и следуйте инструкциям. Весь процесс занимает несколько минут.' },
+  { q: 'Какие способы оплаты доступны?', a: 'Оплата принимается картами РФ, СБП и криптовалютой (TON, USDT TON/TRC-20, Solana). Все способы доступны при оформлении заказа.' },
+  { q: 'Нужен ли Discord Nitro для заказа?', a: 'Нет, не обязательно. В нашем каталоге представлены отдельные категории товаров для аккаунтов без Nitro и с Nitro. Вы можете выбрать подходящий вариант.' },
+  { q: 'Как быстро я получу товар после оплаты?', a: 'В течение 10–15 минут после подтверждения платежа заказ обрабатывается и товар отправляется.' },
+  { q: 'Что такое «украшения» и «наборы»?', a: 'Украшения — это отдельные элементы для профиля Discord (рамка аватара, баннер, цвет ника и т.д.). Наборы представляют собой комплект из нескольких украшений по выгодной цене.' },
+  { q: 'Как работает возврат?', a: 'Возврат товара осуществляется только в случае, если проблема возникла по нашей вине. В остальных случаях возврат не предусмотрен.' },
 ]
 
 type CategoryTab = 'decorations' | 'bundles'
@@ -60,6 +60,10 @@ const decorationsNoNitro: PriceItem[] = [
   { label: 'Украшение', priceUSD: 11.99, priceRUB: 399.99 },
   { label: 'Украшение', priceUSD: 12.99, priceRUB: 439.99 },
   { label: 'Украшение', priceUSD: 15.99, priceRUB: 499.99 },
+  { label: 'Украшение', priceUSD: 6.99, priceRUB: 189.99 },
+  { label: 'Украшение', priceUSD: 13.99, priceRUB: 459.99 },
+  { label: 'Украшение', priceUSD: 14.99, priceRUB: 479.99 },
+  { label: 'Украшение', priceUSD: 18.99, priceRUB: 599.99 },
 ]
 
 const bundlesNoNitro: PriceItem[] = [
@@ -70,6 +74,9 @@ const bundlesNoNitro: PriceItem[] = [
   { label: 'Набор', priceUSD: 19.99, priceRUB: 709.99 },
   { label: 'Набор', priceUSD: 23.99, priceRUB: 769.99 },
   { label: 'Набор', priceUSD: 28.99, priceRUB: 999.99 },
+  { label: 'Набор', priceUSD: 34.99, priceRUB: 1199.99 },
+  { label: 'Набор', priceUSD: 39.99, priceRUB: 1399.99 },
+  { label: 'Набор', priceUSD: 49.99, priceRUB: 1699.99 },
 ]
 
 const decorationsWithNitro: PriceItem[] = [
@@ -81,6 +88,11 @@ const decorationsWithNitro: PriceItem[] = [
   { label: 'Украшение', priceUSD: 8.99, priceRUB: 349.99 },
   { label: 'Украшение', priceUSD: 9.99, priceRUB: 419.99 },
   { label: 'Украшение', priceUSD: 11.99, priceRUB: 479.99 },
+  { label: 'Украшение', priceUSD: 5.49, priceRUB: 159.99 },
+  { label: 'Украшение', priceUSD: 9.49, priceRUB: 389.99 },
+  { label: 'Украшение', priceUSD: 10.99, priceRUB: 429.99 },
+  { label: 'Украшение', priceUSD: 13.99, priceRUB: 499.99 },
+  { label: 'Украшение', priceUSD: 15.99, priceRUB: 549.99 },
 ]
 
 const bundlesWithNitro: PriceItem[] = [
@@ -91,6 +103,9 @@ const bundlesWithNitro: PriceItem[] = [
   { label: 'Набор', priceUSD: 15.99, priceRUB: 666.99 },
   { label: 'Набор', priceUSD: 17.99, priceRUB: 739.99 },
   { label: 'Набор', priceUSD: 22.99, priceRUB: 949.99 },
+  { label: 'Набор', priceUSD: 29.99, priceRUB: 1099.99 },
+  { label: 'Набор', priceUSD: 35.99, priceRUB: 1299.99 },
+  { label: 'Набор', priceUSD: 44.99, priceRUB: 1599.99 },
 ]
 
 function TiltCard({ children, className, style }: { children: React.ReactNode; className?: string; style?: React.CSSProperties }) {
@@ -107,11 +122,11 @@ function TiltCard({ children, className, style }: { children: React.ReactNode; c
     const x = e.clientX - r.left
     const y = e.clientY - r.top
     ref.current.style.transition = 'none'
-    ref.current.style.transform = `perspective(400px) rotateX(${(y - r.height / 2) / 16}deg) rotateY(${(r.width / 2 - x) / 16}deg)`
+    ref.current.style.transform = `perspective(400px) rotateX(${(y - r.height / 2) / 24}deg) rotateY(${(r.width / 2 - x) / 24}deg)`
   }
   const onLeave = () => {
     if (isTouch.current || !ref.current) return
-    ref.current.style.transition = 'transform 0.2s ease-out'
+    ref.current.style.transition = 'transform 0.4s ease-out'
     ref.current.style.transform = 'perspective(400px) rotateX(0deg) rotateY(0deg)'
     setTimeout(() => { if (ref.current) ref.current.style.transition = '' }, 250)
   }
@@ -123,37 +138,36 @@ function TiltCard({ children, className, style }: { children: React.ReactNode; c
 
 function PriceGrid({ items, filler, tabKey, onAdd }: { items: PriceItem[]; filler?: { label: string; desc: string }; tabKey: string; onAdd?: (item: PriceItem) => void }) {
   return (
-    <div key={tabKey} className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 animate-fade-in">
+    <div key={tabKey} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 animate-fade-in">
       {items.map((item, i) => (
         <TiltCard
           key={`${item.priceUSD}-${i}`}
-          className="bg-white/[0.03] border border-white/[0.08] rounded-lg p-3 sm:p-4 flex flex-row items-center gap-x-2 animate-fade-in hover:bg-white/[0.06] hover:border-white/15 transition-all duration-200"
+          className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-3 sm:p-4 flex items-center justify-between sm:flex-col sm:text-center gap-x-3 sm:gap-x-4 gap-y-1.5 sm:gap-y-2 animate-fade-in group cursor-pointer hover:bg-white/[0.06] hover:border-white/15 transition-all duration-200 ease-out will-change-transform"
           style={{ animationDelay: `${i * 0.06}s` }}
         >
-          <span className="text-[10px] xs:text-[11px] tracking-wider uppercase text-white/40 shrink-0 min-w-0 truncate">{item.label}</span>
-          <div className="flex-1 text-center min-w-0">
-            <div className="text-sm xs:text-base sm:text-lg font-bold text-white/90 tabular-nums leading-tight">${item.priceUSD}</div>
-            <div className="text-[9px] xs:text-[10px] text-white/25">{item.priceRUB} ₽</div>
+          <span className="text-xs sm:text-sm text-white/60 font-medium group-hover:text-white/80 transition-colors">{item.label}</span>
+          <div className="flex items-center gap-3">
+            <div className="text-right sm:text-center">
+              <div className="text-base sm:text-lg font-bold text-white/90">${item.priceUSD}</div>
+              <div className="text-[11px] sm:text-xs text-white/30">{item.priceRUB} ₽</div>
+            </div>
+            <button
+              onClick={(e) => { e.stopPropagation(); onAdd?.(item) }}
+              className="shrink-0 w-7 h-7 flex items-center justify-center bg-white/[0.08] hover:bg-white/20 transition-colors rounded-lg"
+              title="Добавить в корзину"
+            >
+              <ShoppingCart className="w-3.5 h-3.5 text-white/50" />
+            </button>
           </div>
-          <button
-            onClick={(e) => { e.stopPropagation(); onAdd?.(item) }}
-            className="shrink-0 w-7 h-7 flex items-center justify-center bg-white/[0.06] hover:bg-white/20 transition-colors rounded"
-            title="Добавить в корзину"
-          >
-            <ShoppingCart className="w-3.5 h-3.5 text-white/50" />
-          </button>
         </TiltCard>
       ))}
       {filler && (
         <div
-          className="bg-white/[0.02] border border-dashed border-white/[0.08] rounded-lg p-3 sm:p-4 flex flex-row items-center justify-center gap-2 hover:bg-white/[0.05] hover:border-white/15 transition-all duration-300 animate-fade-in group"
+          className="bg-white/[0.02] border border-dashed border-white/[0.08] rounded-xl p-3 sm:p-4 flex flex-col items-center justify-center gap-1 hover:bg-white/[0.05] hover:border-white/15 transition-all duration-300 animate-fade-in group"
           style={{ animationDelay: `${items.length * 0.06}s` }}
         >
-          <span className="text-white/40 text-lg leading-none">+</span>
-          <div>
-            <div className="text-[11px] xs:text-xs font-medium text-white/40">{filler.label}</div>
-            <div className="text-[10px] text-white/20">{filler.desc}</div>
-          </div>
+          <span className="text-xs sm:text-sm font-medium text-white/40 group-hover:text-white/60 transition-colors">{filler.label}</span>
+          <span className="text-[11px] sm:text-xs text-white/20">{filler.desc}</span>
         </div>
       )}
     </div>
@@ -227,6 +241,7 @@ function App() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [cart, setCart] = useState<PriceItem[]>([])
   const [cartOpen, setCartOpen] = useState(false)
+  const [checkoutOpen, setCheckoutOpen] = useState(false)
 
   const onAdd = (item: PriceItem) => setCart(prev => [...prev, item])
   const removeFromCart = (index: number) => setCart(prev => prev.filter((_, i) => i !== index))
@@ -453,14 +468,78 @@ function App() {
                       ${cart.reduce((s, i) => s + i.priceUSD, 0).toFixed(2)}
                     </span>
                   </div>
-                  <a href="https://t.me/CastelloShop_bot" target="_blank" rel="noopener noreferrer"
+                  <button onClick={() => { setCartOpen(false); setCheckoutOpen(true) }}
                     className="block w-full text-center px-4 py-3 bg-white text-[#070708] font-semibold text-sm rounded-xl hover:bg-gray-100 transition-colors"
                   >
-                    Оформить в Telegram
-                  </a>
+                    Оформить заказ
+                  </button>
                 </div>
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {checkoutOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setCheckoutOpen(false)} />
+          <div className="relative w-full max-w-lg bg-[#070708] border border-white/[0.08] rounded-2xl animate-fade-in max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
+              <span className="text-sm font-medium text-white/80">Оформление заказа</span>
+              <button onClick={() => setCheckoutOpen(false)} className="w-7 h-7 rounded-lg bg-white/[0.06] flex items-center justify-center hover:bg-white/15 transition-colors">
+                <X className="w-4 h-4 text-white/60" />
+              </button>
+            </div>
+            <div className="overflow-y-auto px-5 py-4 space-y-4">
+              <div>
+                <label className="text-xs text-white/40 mb-1.5 block">Ваш Discord (имя пользователя)</label>
+                <input
+                  type="text"
+                  placeholder="username#0000"
+                  className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-white/80 placeholder:text-white/20 outline-none focus:border-white/20 transition-colors"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-white/40 mb-2 block">Способ оплаты</label>
+                <div className="space-y-2">
+                  {[
+                    { value: 'card', label: 'Банковская карта', desc: 'Visa, Mastercard, МИР' },
+                    { value: 'sbp', label: 'СБП', desc: 'Моментальный перевод' },
+                    { value: 'crypto', label: 'Криптовалюта', desc: 'TON, USDT, Solana' },
+                  ].map((m) => (
+                    <label key={m.value} className="flex items-center gap-3 bg-white/[0.03] border border-white/[0.06] rounded-xl px-4 py-3 cursor-pointer hover:bg-white/[0.06] transition-colors">
+                      <input type="radio" name="payment" defaultChecked={m.value === 'card'} className="accent-white" />
+                      <div>
+                        <div className="text-sm font-medium text-white/80">{m.label}</div>
+                        <div className="text-xs text-white/40">{m.desc}</div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl px-4 py-3">
+                <div className="text-xs text-white/40 mb-2">Состав заказа</div>
+                <div className="space-y-1.5">
+                  {cart.map((item, i) => (
+                    <div key={i} className="flex items-center justify-between text-sm">
+                      <span className="text-white/70">{item.label}</span>
+                      <span className="text-white/50">${item.priceUSD}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="border-t border-white/[0.06] mt-3 pt-3 flex items-center justify-between text-sm">
+                  <span className="text-white/50">Итого</span>
+                  <span className="font-semibold text-white">${cart.reduce((s, i) => s + i.priceUSD, 0).toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+            <div className="border-t border-white/[0.06] px-5 py-4">
+              <button
+                className="w-full text-center px-4 py-3 bg-white text-[#070708] font-semibold text-sm rounded-xl hover:bg-gray-100 transition-colors"
+              >
+                Отправить заказ
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -492,7 +571,7 @@ function App() {
             <div className="flex flex-col items-center justify-center h-full px-6 max-w-4xl mx-auto">
               <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.04)_0%,transparent_60%)]" />
               <div className="animate-fade-in text-center" style={{ animationDelay: '0.1s' }}>
-                <span className="inline-block text-[10px] tracking-[0.3em] uppercase text-white/30 bg-white/[0.04] px-5 py-2 rounded-full">Discord Ecosystem</span>
+                <span className="inline-block text-[10px] tracking-[0.3em] uppercase text-white/30 bg-white/[0.04] px-5 py-2 rounded-full">Castello Shop</span>
               </div>
               <div className="animate-fade-in mt-4 text-center" style={{ animationDelay: '0.2s' }}>
                 <h1 className="text-4xl xs:text-5xl sm:text-7xl md:text-8xl font-bold tracking-tight leading-none">
@@ -518,7 +597,7 @@ function App() {
                 </a>
               </div>
               <div className="animate-fade-in mt-4 text-center" style={{ animationDelay: '0.6s' }}>
-                <p className="text-white/20 text-xs">Заказ через бота — быстро и без лишних шагов</p>
+                  <p className="text-white/20 text-xs">Оформление заказа через сайт — быстро и безопасно</p>
               </div>
             </div>
           </SlideFade>
@@ -580,7 +659,7 @@ function App() {
                 <a href="https://t.me/CastelloShop_bot" target="_blank" rel="noopener noreferrer"
                   className="group inline-flex items-center gap-2 px-4 xs:px-6 py-2 xs:py-3 bg-white/[0.04] border border-white/[0.08] text-white/60 font-medium rounded-xl hover:bg-white/[0.07] hover:border-white/15 hover:text-white/80 transition-all duration-200 text-xs xs:text-sm"
                 >
-                  Посмотреть все товары в боте
+                  Посмотреть все товары в Telegram
                   <svg className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                   </svg>
@@ -600,47 +679,70 @@ function App() {
             <div className="overflow-y-auto h-full px-4 sm:px-6 max-w-4xl mx-auto flex flex-col items-center justify-center py-6">
               <SectionHeading label="Процесс" title="Как сделать заказ" />
 
-              <div className="relative grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-8 mt-2 sm:mt-4 w-full max-w-3xl mx-auto">
-                {/* Desktop connectors */}
-                <div className="hidden sm:block absolute top-14 left-[calc(16.66%+1.5rem)] right-[calc(16.66%+1.5rem)] h-px">
-                  <div className="w-full h-full bg-gradient-to-r from-transparent via-white/[0.08] to-transparent relative">
-                    <div className="absolute left-1/4 top-0 w-2 h-2 -translate-y-1/2 rounded-full bg-white/[0.06]" />
-                    <div className="absolute left-2/4 top-0 w-2 h-2 -translate-y-1/2 rounded-full bg-white/[0.06]" />
-                    <div className="absolute left-3/4 top-0 w-2 h-2 -translate-y-1/2 rounded-full bg-white/[0.06]" />
-                  </div>
-                </div>
+              <div className="relative w-full max-w-3xl mx-auto mt-2 sm:mt-4">
+                {/* Central line */}
+                <div className="absolute left-6 sm:left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-white/[0.15] via-white/[0.06] to-transparent -translate-x-1/2" />
+
                 {[
-                  { step: '01', title: 'Открой бота', desc: 'Перейди в Telegram-бота Castello и нажми «Запустить».' },
-                  { step: '02', title: 'Выбери товар', desc: 'Ознакомься с каталогом, выбери украшение или набор по цене.' },
-                  { step: '03', title: 'Оплати и получи', desc: 'Оплати картой, СБП или криптой — товар придёт в течение 10–15 минут.' },
-                ].map((item, i) => (
-                  <div key={item.step} className="animate-fade-in" style={{ animationDelay: `${0.2 + i * 0.15}s` }}>
-                    <div className="relative bg-white/[0.02] border border-white/[0.06] rounded-2xl p-5 sm:p-6 overflow-hidden text-center">
-                      <div className="relative flex flex-col items-center">
-                        <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-white/[0.06] border border-white/[0.08] flex items-center justify-center mb-3">
-                          {i === 0 ? (
-                            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white/50" viewBox="0 0 24 24" fill="currentColor">
-                              <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
-                            </svg>
-                          ) : i === 1 ? (
-                            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5m8.25 3v6.75m0 0l-3-3m3 3l3-3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
-                            </svg>
-                          ) : (
-                            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                          )}
+                  { step: '01', title: 'Оформление заказа', desc: 'Добавьте товары в корзину и укажите данные Discord.' },
+                  { step: '02', title: 'Оплата', desc: 'Выберите способ оплаты и оплатите заказ на сайте.' },
+                  { step: '03', title: 'Предоставление данных', desc: 'Вы передаёте данные от аккаунта Discord для входа.' },
+                  { step: '04', title: 'Продавец заходит в аккаунт', desc: 'Мы получаем доступ к вашему аккаунту Discord.' },
+                  { step: '05', title: 'Оформление покупки', desc: 'Продавец приобретает украшения через ваш аккаунт.' },
+                  { step: '06', title: 'Заказ завершён', desc: 'Подтверждаем выполнение — вы получаете готовый профиль.' },
+                ].map((item, i) => {
+                  const isLeft = i % 2 === 0
+                  return (
+                    <div key={item.step} className={`relative flex items-start gap-6 sm:gap-0 ${isLeft ? 'sm:flex-row' : 'sm:flex-row-reverse'} animate-fade-in mb-2 sm:mb-0`} style={{ animationDelay: `${0.05 + i * 0.1}s` }}>
+                      {/* Dot on the line */}
+                      <div className="relative z-10 shrink-0 w-12 sm:w-0 flex items-center justify-center">
+                        <div className="w-3 h-3 rounded-full bg-white/20 border-2 border-[#070708] shadow-[0_0_0_4px_rgba(255,255,255,0.04)] sm:absolute sm:left-1/2 sm:-translate-x-1/2" />
+                      </div>
+
+                      {/* Card */}
+                      <div className={`flex-1 sm:w-1/2 ${isLeft ? 'sm:pr-10 sm:text-right' : 'sm:pl-10'}`}>
+                        <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-4 sm:p-5 overflow-hidden">
+                          <div className={`flex items-center gap-4 sm:gap-5 ${isLeft ? 'sm:flex-row-reverse' : ''}`}>
+                            <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-white/[0.06] border border-white/[0.08] flex items-center justify-center shrink-0">
+                              {i === 0 ? (
+                                <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6 text-white/50" />
+                              ) : i === 1 ? (
+                                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
+                                </svg>
+                              ) : i === 2 ? (
+                                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" />
+                                </svg>
+                              ) : i === 3 ? (
+                                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                                </svg>
+                              ) : i === 4 ? (
+                                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                              ) : (
+                                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                              )}
+                            </div>
+                            <div className={`flex-1 min-w-0 ${isLeft ? 'sm:text-right' : ''}`}>
+                              <div className={`flex items-center gap-2 ${isLeft ? 'sm:flex-row-reverse' : ''}`}>
+                                <span className={`text-[10px] sm:text-[11px] tracking-wider font-mono ${i === 0 ? 'text-sky-400/30' : i === 1 ? 'text-emerald-400/30' : i === 2 ? 'text-amber-400/30' : i === 3 ? 'text-rose-400/30' : i === 4 ? 'text-violet-400/30' : 'text-emerald-400/30'}`}>
+                                  {item.step}
+                                </span>
+                                <h3 className="text-sm sm:text-base font-semibold text-white/80">{item.title}</h3>
+                              </div>
+                              <p className="text-white/40 text-xs sm:text-sm mt-0.5 leading-relaxed">{item.desc}</p>
+                            </div>
+                          </div>
                         </div>
-                        <span className={`text-[10px] sm:text-[11px] tracking-wider font-mono ${i === 0 ? 'text-sky-400/30' : i === 1 ? 'text-amber-400/30' : 'text-emerald-400/30'}`}>
-                          {item.step}
-                        </span>
-                        <h3 className="text-sm sm:text-base font-semibold text-white/80 mt-1">{item.title}</h3>
-                        <p className="text-white/40 text-xs sm:text-sm mt-1.5 leading-relaxed">{item.desc}</p>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           </SlideFade>
@@ -664,7 +766,7 @@ function App() {
               <SectionHeading label="Оплата" title="Доступные способы" />
 
               {/* Credit Card Visual */}
-              <div className="relative w-full max-w-xs mx-auto mb-6 sm:mb-8 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+              <TiltCard className="relative w-full max-w-xs mx-auto mb-6 sm:mb-8 animate-fade-in" style={{ animationDelay: '0.1s' }}>
                 <div className="relative aspect-[1.586/1] rounded-2xl bg-gradient-to-br from-white/[0.08] via-white/[0.04] to-transparent border border-white/[0.08] p-5 sm:p-6 overflow-hidden">
                   <div className="absolute -top-12 -right-12 w-36 h-36 rounded-full bg-gradient-to-br from-white/[0.06] to-transparent blur-xl" />
                   <div className="absolute -bottom-8 -left-8 w-24 h-24 rounded-full bg-gradient-to-tr from-white/[0.04] to-transparent blur-lg" />
@@ -692,7 +794,7 @@ function App() {
                     </div>
                   </div>
                 </div>
-              </div>
+              </TiltCard>
 
               {/* Payment Methods */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 w-full max-w-2xl mx-auto">
@@ -700,8 +802,6 @@ function App() {
                   {
                     label: 'Банковские карты',
                     desc: 'Visa, Mastercard, МИР',
-                    accent: 'from-blue-500/20 to-blue-600/5',
-                    borderAccent: 'group-hover:border-blue-500/30',
                     icon: (
                       <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
                     ),
@@ -709,8 +809,6 @@ function App() {
                   {
                     label: 'СБП',
                     desc: 'Моментальный перевод',
-                    accent: 'from-emerald-500/20 to-emerald-600/5',
-                    borderAccent: 'group-hover:border-emerald-500/30',
                     icon: (
                       <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
                     ),
@@ -718,25 +816,22 @@ function App() {
                   {
                     label: 'Криптовалюта',
                     desc: 'TON, USDT (TON / TRC-20), Solana',
-                    accent: 'from-violet-500/20 to-violet-600/5',
-                    borderAccent: 'group-hover:border-violet-500/30',
                     icon: (
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     ),
                   },
                 ].map((method, i) => (
                   <div key={method.label}
-                    className={`group relative flex sm:flex-col items-center sm:text-center gap-3 sm:gap-3 bg-white/[0.03] border border-white/[0.06] rounded-2xl p-3 sm:p-4 sm:pt-6 ${method.borderAccent} hover:bg-white/[0.06] transition-all duration-300 animate-fade-in overflow-hidden`}
+                    className="relative flex sm:flex-col items-center sm:text-center gap-3 sm:gap-3 bg-white/[0.03] border border-white/[0.06] rounded-2xl p-3 sm:p-4 sm:pt-6 animate-fade-in overflow-hidden"
                     style={{ animationDelay: `${0.2 + i * 0.1}s` }}>
-                    <div className={`absolute inset-0 bg-gradient-to-br ${method.accent} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
-                    <div className="relative shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/[0.06] border border-white/[0.06] flex items-center justify-center group-hover:scale-110 group-hover:border-white/20 transition-all duration-300">
-                      <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white/50 group-hover:text-white/70 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <div className="relative shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/[0.06] border border-white/[0.06] flex items-center justify-center">
+                      <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                         {method.icon}
                       </svg>
                     </div>
                     <div className="relative">
-                      <div className="text-sm sm:text-base font-semibold text-white/80 group-hover:text-white transition-colors">{method.label}</div>
-                      <p className="text-white/30 text-xs sm:text-sm mt-0.5 group-hover:text-white/40 transition-colors">{method.desc}</p>
+                      <div className="text-sm sm:text-base font-semibold text-white/80">{method.label}</div>
+                      <p className="text-white/30 text-xs sm:text-sm mt-0.5">{method.desc}</p>
                     </div>
                   </div>
                 ))}
@@ -773,9 +868,9 @@ function App() {
             <div className="overflow-y-auto h-full px-4 sm:px-6 max-w-3xl mx-auto flex flex-col items-center justify-center py-6">
               <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl sm:rounded-3xl p-5 sm:p-10 text-center hover:bg-white/[0.03] transition-colors">
                 <span className="inline-block text-[10px] tracking-[0.25em] uppercase text-white/30 bg-white/[0.04] px-4 py-1.5 rounded-full mb-3">Сообщество</span>
-                <h2 className="text-2xl sm:text-3xl font-bold mt-2">Присоединяйся к Discord</h2>
+                <h2 className="text-2xl sm:text-3xl font-bold mt-2">Присоединяйтесь к Discord</h2>
                 <p className="text-white/40 text-sm sm:text-base mt-2 max-w-lg mx-auto leading-relaxed">
-                  Общайся с другими пользователями, получай новости и участвуй в закрытых распродажах.
+                  Общайтесь с другими пользователями, получайте новости и участвуйте в закрытых распродажах.
                 </p>
                 <a href="https://discord.gg/uA4vu9CXHE" target="_blank" rel="noopener noreferrer"
                   className="group relative inline-flex items-center gap-3 px-6 py-3 bg-[#5865F2] text-white font-semibold text-sm sm:text-base rounded-2xl transition-all duration-300 hover:bg-[#4752c4] hover:scale-[1.03] active:scale-95 mt-4">
@@ -789,8 +884,8 @@ function App() {
               </div>
 
               <div className="text-center mt-4 sm:mt-6">
-                <h2 className="text-2xl sm:text-3xl font-bold">Готов начать?</h2>
-                <p className="text-white/40 text-sm sm:text-base mt-2">Жми кнопку и выбирай то, что подходит именно тебе.</p>
+                  <h2 className="text-2xl sm:text-3xl font-bold">Готовы начать?</h2>
+                  <p className="text-white/40 text-sm sm:text-base mt-2">Нажмите кнопку и выберите то, что подходит именно вам.</p>
                 <a href="https://t.me/CastelloShop_bot" target="_blank" rel="noopener noreferrer"
                   className="relative inline-flex items-center gap-3 px-8 py-3 sm:py-4 bg-white text-[#070708] font-semibold text-sm sm:text-base rounded-2xl mt-4"
                 >
@@ -804,7 +899,7 @@ function App() {
               </div>
 
               <footer className="flex flex-col items-center text-center mt-30 border-t border-white/[0.04] pt-3 sm:pt-4 animate-fade-in" style={{ animationDelay: '2s' }}>
-                <p className="mb-2 text-white/20 text-[10px] sm:text-xs">Castello Ecosystem &copy; {new Date().getFullYear()}</p>
+                <p className="mb-2 text-white/20 text-[10px] sm:text-xs">Castello Shop &copy; {new Date().getFullYear()}</p>
                 <div className="bg-white/[0.04] border border-white/[0.06] rounded-2xl px-4 py-3 inline-block">
                   <p className="text-white/60 text-xs sm:text-sm font-medium mb-1">ИП Бережной Егор Станиславович</p>
                   <p className="text-white/30 text-[10px] sm:text-xs">ИНН 910824288444 &nbsp;|&nbsp; ОГРНИП 325911200146721</p>
