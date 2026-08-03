@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { ShoppingCart, Menu, X } from 'lucide-react'
+import { ShoppingCart, Plus, Check, Menu, X, CreditCard } from 'lucide-react'
 
 function SlideFade({ active, delay = 0, children, className }: { active: boolean; delay?: number; children: React.ReactNode; className?: string }) {
   return (
@@ -23,14 +23,14 @@ function SectionHeading({ label, title }: { label: string; title: string }) {
 
 function FaqItem({ q, a, open, onToggle }: { q: string; a: string; open: boolean; onToggle: () => void }) {
   return (
-    <div className="border-b border-white/[0.05]">
-      <button onClick={onToggle} className="w-full flex items-center justify-between py-5 text-left text-base sm:text-lg font-medium text-white/80 hover:text-white transition-colors">
+    <div className="relative bg-white/[0.02] rounded-xl px-4 sm:px-5 overflow-hidden transition-all duration-300 group hover:bg-white/[0.03] before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/15 before:to-transparent hover:before:via-white/25 after:content-[''] after:absolute after:top-2 after:right-2 after:w-1 after:h-1 after:rounded-full after:bg-white/10 after:opacity-0 group-hover:after:opacity-100 after:transition-opacity after:duration-300">
+      <button onClick={onToggle} className="w-full flex items-center justify-between py-4 sm:py-5 text-left text-base sm:text-lg font-medium text-white/80 hover:text-white transition-colors">
         {q}
         <svg className={`w-4 h-4 shrink-0 ml-4 text-white/30 transition-transform duration-300 ${open ? 'rotate-45' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
         </svg>
       </button>
-      <div className={`overflow-hidden transition-all duration-300 ${open ? 'max-h-60 pb-5' : 'max-h-0'}`}>
+      <div className={`overflow-hidden transition-all duration-300 ${open ? 'max-h-60 pb-4 sm:pb-5' : 'max-h-0'}`}>
         <p className="text-white/50 text-sm sm:text-base leading-relaxed">{a}</p>
       </div>
     </div>
@@ -60,10 +60,6 @@ const decorationsNoNitro: PriceItem[] = [
   { label: 'Украшение', priceUSD: 11.99, priceRUB: 399.99 },
   { label: 'Украшение', priceUSD: 12.99, priceRUB: 439.99 },
   { label: 'Украшение', priceUSD: 15.99, priceRUB: 499.99 },
-  { label: 'Украшение', priceUSD: 6.99, priceRUB: 189.99 },
-  { label: 'Украшение', priceUSD: 13.99, priceRUB: 459.99 },
-  { label: 'Украшение', priceUSD: 14.99, priceRUB: 479.99 },
-  { label: 'Украшение', priceUSD: 18.99, priceRUB: 599.99 },
 ]
 
 const bundlesNoNitro: PriceItem[] = [
@@ -74,9 +70,6 @@ const bundlesNoNitro: PriceItem[] = [
   { label: 'Набор', priceUSD: 19.99, priceRUB: 709.99 },
   { label: 'Набор', priceUSD: 23.99, priceRUB: 769.99 },
   { label: 'Набор', priceUSD: 28.99, priceRUB: 999.99 },
-  { label: 'Набор', priceUSD: 34.99, priceRUB: 1199.99 },
-  { label: 'Набор', priceUSD: 39.99, priceRUB: 1399.99 },
-  { label: 'Набор', priceUSD: 49.99, priceRUB: 1699.99 },
 ]
 
 const decorationsWithNitro: PriceItem[] = [
@@ -88,11 +81,6 @@ const decorationsWithNitro: PriceItem[] = [
   { label: 'Украшение', priceUSD: 8.99, priceRUB: 349.99 },
   { label: 'Украшение', priceUSD: 9.99, priceRUB: 419.99 },
   { label: 'Украшение', priceUSD: 11.99, priceRUB: 479.99 },
-  { label: 'Украшение', priceUSD: 5.49, priceRUB: 159.99 },
-  { label: 'Украшение', priceUSD: 9.49, priceRUB: 389.99 },
-  { label: 'Украшение', priceUSD: 10.99, priceRUB: 429.99 },
-  { label: 'Украшение', priceUSD: 13.99, priceRUB: 499.99 },
-  { label: 'Украшение', priceUSD: 15.99, priceRUB: 549.99 },
 ]
 
 const bundlesWithNitro: PriceItem[] = [
@@ -103,32 +91,32 @@ const bundlesWithNitro: PriceItem[] = [
   { label: 'Набор', priceUSD: 15.99, priceRUB: 666.99 },
   { label: 'Набор', priceUSD: 17.99, priceRUB: 739.99 },
   { label: 'Набор', priceUSD: 22.99, priceRUB: 949.99 },
-  { label: 'Набор', priceUSD: 29.99, priceRUB: 1099.99 },
-  { label: 'Набор', priceUSD: 35.99, priceRUB: 1299.99 },
-  { label: 'Набор', priceUSD: 44.99, priceRUB: 1599.99 },
 ]
 
 function TiltCard({ children, className, style }: { children: React.ReactNode; className?: string; style?: React.CSSProperties }) {
   const ref = useRef<HTMLDivElement>(null)
   const rectRef = useRef<DOMRect | null>(null)
   const isTouch = useRef(typeof window !== 'undefined' && 'ontouchstart' in window)
+  const lift = -4
   const onEnter = () => {
     if (!ref.current) return
     rectRef.current = ref.current.getBoundingClientRect()
+    ref.current.style.transition = 'transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+    ref.current.style.transform = `translateY(${lift}px)`
   }
   const onMove = (e: React.MouseEvent) => {
     if (isTouch.current || !ref.current || !rectRef.current) return
     const r = rectRef.current
     const x = e.clientX - r.left
     const y = e.clientY - r.top
-    ref.current.style.transition = 'none'
-    ref.current.style.transform = `perspective(400px) rotateX(${(y - r.height / 2) / 24}deg) rotateY(${(r.width / 2 - x) / 24}deg)`
+    ref.current.style.transition = 'transform 0.08s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+    ref.current.style.transform = `perspective(400px) translateY(${lift}px) rotateX(${(y - r.height / 2) / 24}deg) rotateY(${(r.width / 2 - x) / 24}deg)`
   }
   const onLeave = () => {
     if (isTouch.current || !ref.current) return
-    ref.current.style.transition = 'transform 0.4s ease-out'
+    ref.current.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
     ref.current.style.transform = 'perspective(400px) rotateX(0deg) rotateY(0deg)'
-    setTimeout(() => { if (ref.current) ref.current.style.transition = '' }, 250)
+    setTimeout(() => { if (ref.current) ref.current.style.transition = '' }, 400)
   }
   if (isTouch.current) {
     return <div className={className} style={style}>{children}</div>
@@ -137,34 +125,49 @@ function TiltCard({ children, className, style }: { children: React.ReactNode; c
 }
 
 function PriceGrid({ items, filler, tabKey, onAdd }: { items: PriceItem[]; filler?: { label: string; desc: string }; tabKey: string; onAdd?: (item: PriceItem) => void }) {
+  const [added, setAdded] = useState<Set<number>>(new Set())
+  const timers = useRef<(ReturnType<typeof setTimeout> | undefined)[]>([])
+  const handleAdd = (i: number, item: PriceItem) => {
+    onAdd?.(item)
+    setAdded(prev => new Set(prev).add(i))
+    clearTimeout(timers.current[i])
+    timers.current[i] = setTimeout(() => {
+      setAdded(prev => { const next = new Set(prev); next.delete(i); return next })
+    }, 1600)
+  }
   return (
     <div key={tabKey} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 animate-fade-in">
-      {items.map((item, i) => (
+      {items.map((item, i) => {
+        const justAdded = added.has(i)
+        return (
         <TiltCard
           key={`${item.priceUSD}-${i}`}
-          className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-3 sm:p-4 flex items-center justify-between sm:flex-col sm:text-center gap-x-3 sm:gap-x-4 gap-y-1.5 sm:gap-y-2 animate-fade-in group cursor-pointer hover:bg-white/[0.06] hover:border-white/15 transition-all duration-200 ease-out will-change-transform"
-          style={{ animationDelay: `${i * 0.06}s` }}
+          className="relative bg-white/[0.03] border border-white/[0.06] rounded-xl p-3 sm:p-4 flex items-center justify-between sm:flex-col sm:text-center gap-x-3 sm:gap-x-4 gap-y-1.5 sm:gap-y-2 animate-fade-in group cursor-pointer hover:bg-white/[0.03] hover:border-white/[0.1] hover:shadow-[0_20px_50px_-12px_rgba(255,255,255,0.06)] transition-all duration-1000 ease-[cubic-bezier(0.25,0.46,0.45,0.94)] will-change-transform overflow-hidden before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/15 before:to-transparent hover:before:via-white/25 after:content-[''] after:absolute after:top-2 after:right-2 after:w-1 after:h-1 after:rounded-full after:bg-white/10 after:opacity-0 group-hover:after:opacity-100 after:transition-opacity after:duration-1000"
+          style={{ animationDelay: `${0.05 + i * 0.08}s` }}
         >
-          <span className="text-xs sm:text-sm text-white/60 font-medium group-hover:text-white/80 transition-colors">{item.label}</span>
+          <span className="text-xs sm:text-sm text-white/60 font-medium group-hover:text-white/80 transition-colors duration-300">{item.label}</span>
           <div className="flex items-center gap-3">
             <div className="text-right sm:text-center">
               <div className="text-base sm:text-lg font-bold text-white/90">${item.priceUSD}</div>
               <div className="text-[11px] sm:text-xs text-white/30">{item.priceRUB} ₽</div>
             </div>
             <button
-              onClick={(e) => { e.stopPropagation(); onAdd?.(item) }}
-              className="shrink-0 w-7 h-7 flex items-center justify-center bg-white/[0.08] hover:bg-white/20 transition-colors rounded-lg"
-              title="Добавить в корзину"
+              onClick={(e) => { e.stopPropagation(); handleAdd(i, item) }}
+              className="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg relative transition-all duration-200 group/add"
+              title={justAdded ? 'Добавлено' : 'Добавить в корзину'}
+              style={justAdded ? { backgroundColor: 'rgba(52,211,153,0.15)' } : undefined}
             >
-              <ShoppingCart className="w-3.5 h-3.5 text-white/50" />
+              <Check className={`w-3.5 h-3.5 text-emerald-400 transition-all duration-300 ${justAdded ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}`} />
+              <ShoppingCart className={`w-3.5 h-3.5 text-white/50 absolute transition-all duration-200 ${justAdded ? 'opacity-0 scale-75' : 'opacity-100 scale-100'} group-hover/add:opacity-0 group-hover/add:scale-75`} />
+              <Plus className={`w-3.5 h-3.5 text-white/50 absolute transition-all duration-200 ${justAdded ? 'opacity-0 scale-75' : 'opacity-0 scale-75 group-hover/add:opacity-100 group-hover/add:scale-100'}`} />
             </button>
           </div>
         </TiltCard>
-      ))}
+      )})}
       {filler && (
         <div
-          className="bg-white/[0.02] border border-dashed border-white/[0.08] rounded-xl p-3 sm:p-4 flex flex-col items-center justify-center gap-1 hover:bg-white/[0.05] hover:border-white/15 transition-all duration-300 animate-fade-in group"
-          style={{ animationDelay: `${items.length * 0.06}s` }}
+          className="relative bg-white/[0.02] border border-dashed border-white/[0.08] rounded-xl p-3 sm:p-4 flex flex-col items-center justify-center gap-1 hover:bg-white/[0.03] hover:border-white/15 hover:shadow-[0_20px_50px_-12px_rgba(255,255,255,0.06)] transition-all duration-1000 ease-[cubic-bezier(0.25,0.46,0.45,0.94)] animate-fade-in group overflow-hidden before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/15 before:to-transparent"
+          style={{ animationDelay: `${0.05 + items.length * 0.08}s` }}
         >
           <span className="text-xs sm:text-sm font-medium text-white/40 group-hover:text-white/60 transition-colors">{filler.label}</span>
           <span className="text-[11px] sm:text-xs text-white/20">{filler.desc}</span>
@@ -235,20 +238,46 @@ const totalSlides = SLIDE_KEYS.length
 function App() {
   const [openFaq, setOpenFaq] = useState<number | null>(null)
   const [category, setCategory] = useState<CategoryTab>('decorations')
-  const [nitroFilter, setNitroFilter] = useState<NitroTab>('with-nitro')
+  const [nitroFilter, setNitroFilter] = useState<NitroTab>('no-nitro')
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
   const [slide, setSlide] = useState(0)
   const [menuOpen, setMenuOpen] = useState(false)
-  const [cart, setCart] = useState<PriceItem[]>([])
+  const [cart, setCart] = useState<PriceItem[]>(() => {
+    try { const v = localStorage.getItem('cart'); return v ? JSON.parse(v) : [] } catch { return [] }
+  })
   const [cartOpen, setCartOpen] = useState(false)
   const [checkoutOpen, setCheckoutOpen] = useState(false)
+  const [toast, setToast] = useState('')
+  const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const [email, setEmail] = useState('')
+  const [discordEmail, setDiscordEmail] = useState('')
+  const [discordPassword, setDiscordPassword] = useState('')
+  const [telegram, setTelegram] = useState('')
+  const [payment, setPayment] = useState('card')
+  const [submitting, setSubmitting] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
+  const resetCheckout = () => { setCheckoutOpen(false); setSubmitted(false); setSubmitting(false); setEmail(''); setDiscordEmail(''); setDiscordPassword(''); setTelegram(''); setPayment('card'); setCart([]) }
 
-  const onAdd = (item: PriceItem) => setCart(prev => [...prev, item])
+  const onAdd = (item: PriceItem) => {
+    setCart(prev => [...prev, item])
+    setToast('Товар добавлен в корзину')
+    clearTimeout(toastTimer.current)
+    toastTimer.current = setTimeout(() => setToast(''), 2000)
+  }
   const removeFromCart = (index: number) => setCart(prev => prev.filter((_, i) => i !== index))
 
   const slideRef = useRef(0)
   const slideNodes = useRef<(HTMLDivElement | null)[]>([])
   const busyRef = useRef(false)
+  const prevSlide = useRef(slide)
+  const [catalogSeq, setCatalogSeq] = useState(0)
+  const [paymentSeq, setPaymentSeq] = useState(0)
+  useEffect(() => { localStorage.setItem('cart', JSON.stringify(cart)) }, [cart])
+  useEffect(() => {
+    if (slide === 1 && prevSlide.current !== 1) setCatalogSeq(s => s + 1)
+    if (slide === 3 && prevSlide.current !== 3) setPaymentSeq(s => s + 1)
+    prevSlide.current = slide
+  }, [slide])
 
   const goToSlide = (i: number, replace = false) => {
     const idx = Math.max(0, Math.min(i, totalSlides - 1))
@@ -351,9 +380,10 @@ function App() {
     })
   }
 
-  const currentItems = category === 'decorations'
-    ? (nitroFilter === 'with-nitro' ? decorationsWithNitro : decorationsNoNitro)
-    : (nitroFilter === 'with-nitro' ? bundlesWithNitro : bundlesNoNitro)
+  const currentItems =
+    category === 'decorations'
+      ? (nitroFilter === 'no-nitro' ? decorationsNoNitro : decorationsWithNitro)
+      : (nitroFilter === 'no-nitro' ? bundlesNoNitro : bundlesWithNitro)
 
   const navItems = [
     { key: 'home', label: 'Главная' },
@@ -434,7 +464,7 @@ function App() {
       {cartOpen && (
         <div className="fixed inset-0 z-50 flex justify-end">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setCartOpen(false)} />
-          <div className="relative w-full max-w-sm bg-[#070708] border-l border-white/[0.08] h-full flex flex-col animate-slide-in-right">
+          <div className="relative w-full max-w-sm bg-[#070708] border-l border-white/[0.08] h-full flex flex-col animate-slide-in-right overflow-hidden before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/15 before:to-transparent">
             <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
               <span className="text-sm font-medium text-white/80">Корзина ({cart.length})</span>
               <button onClick={() => setCartOpen(false)} className="w-7 h-7 rounded-lg bg-white/[0.06] flex items-center justify-center hover:bg-white/15 transition-colors">
@@ -450,10 +480,10 @@ function App() {
               <>
                 <div className="flex-1 overflow-y-auto px-5 py-4 space-y-2">
                   {cart.map((item, i) => (
-                    <div key={i} className="flex items-center justify-between bg-white/[0.03] border border-white/[0.06] rounded-lg px-4 py-3">
+                    <div key={i} className="relative flex items-center justify-between bg-white/[0.03] border border-white/[0.06] rounded-lg px-4 py-3 overflow-hidden before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/15 before:to-transparent">
                       <div>
                         <div className="text-sm font-medium text-white/80">{item.label}</div>
-                        <div className="text-xs text-white/40">${item.priceUSD} &middot; {item.priceRUB} ₽</div>
+                        <div className="text-xs text-white/40">{item.priceRUB} ₽</div>
                       </div>
                       <button onClick={() => removeFromCart(i)} className="w-7 h-7 rounded-lg bg-white/[0.06] flex items-center justify-center hover:bg-white/15 transition-colors shrink-0 ml-3">
                         <X className="w-3.5 h-3.5 text-white/50" />
@@ -465,7 +495,7 @@ function App() {
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-white/50">Итого</span>
                     <span className="font-semibold text-white">
-                      ${cart.reduce((s, i) => s + i.priceUSD, 0).toFixed(2)}
+                      {cart.reduce((s, i) => s + i.priceRUB, 0).toFixed(2)} ₽
                     </span>
                   </div>
                   <button onClick={() => { setCartOpen(false); setCheckoutOpen(true) }}
@@ -482,63 +512,118 @@ function App() {
 
       {checkoutOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setCheckoutOpen(false)} />
-          <div className="relative w-full max-w-lg bg-[#070708] border border-white/[0.08] rounded-2xl animate-fade-in max-h-[90vh] flex flex-col">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={resetCheckout} />
+          <div className="relative w-full max-w-xl bg-[#070708] border border-white/[0.08] rounded-2xl animate-fade-in flex flex-col overflow-hidden before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/15 before:to-transparent">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
               <span className="text-sm font-medium text-white/80">Оформление заказа</span>
-              <button onClick={() => setCheckoutOpen(false)} className="w-7 h-7 rounded-lg bg-white/[0.06] flex items-center justify-center hover:bg-white/15 transition-colors">
+              <button onClick={resetCheckout} className="w-7 h-7 rounded-lg bg-white/[0.06] flex items-center justify-center hover:bg-white/15 transition-colors">
                 <X className="w-4 h-4 text-white/60" />
               </button>
             </div>
-            <div className="overflow-y-auto px-5 py-4 space-y-4">
+            <div className="px-4 py-3 space-y-3">
               <div>
-                <label className="text-xs text-white/40 mb-1.5 block">Ваш Discord (имя пользователя)</label>
-                <input
-                  type="text"
-                  placeholder="username#0000"
-                  className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-white/80 placeholder:text-white/20 outline-none focus:border-white/20 transition-colors"
-                />
+                <label className="text-xs text-white/40 mb-1.5 block">Email для заказа</label>
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="your@email.com" className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-sm text-white/80 placeholder:text-white/20 outline-none focus:border-white/20 transition-colors" />
               </div>
               <div>
-                <label className="text-xs text-white/40 mb-2 block">Способ оплаты</label>
-                <div className="space-y-2">
+                <label className="text-xs text-white/40 mb-1.5 block">Telegram для связи</label>
+                <input type="text" value={telegram} onChange={e => setTelegram(e.target.value)} placeholder="@username" className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-sm text-white/80 placeholder:text-white/20 outline-none focus:border-white/20 transition-colors" />
+              </div>
+              <div>
+                <label className="text-xs text-white/40 mb-1.5 block">Почта Discord</label>
+                <input type="email" value={discordEmail} onChange={e => setDiscordEmail(e.target.value)} placeholder="discord@email.com" className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-sm text-white/80 placeholder:text-white/20 outline-none focus:border-white/20 transition-colors" />
+              </div>
+              <div>
+                <label className="text-xs text-white/40 mb-1.5 block">Пароль Discord</label>
+                <input type="password" value={discordPassword} onChange={e => setDiscordPassword(e.target.value)} placeholder="••••••••" className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-sm text-white/80 placeholder:text-white/20 outline-none focus:border-white/20 transition-colors" />
+              </div>
+              <div>
+                <label className="text-xs text-white/40 mb-1.5 block">Способ оплаты</label>
+                <div className="grid grid-cols-3 gap-2">
                   {[
-                    { value: 'card', label: 'Банковская карта', desc: 'Visa, Mastercard, МИР' },
-                    { value: 'sbp', label: 'СБП', desc: 'Моментальный перевод' },
-                    { value: 'crypto', label: 'Криптовалюта', desc: 'TON, USDT, Solana' },
-                  ].map((m) => (
-                    <label key={m.value} className="flex items-center gap-3 bg-white/[0.03] border border-white/[0.06] rounded-xl px-4 py-3 cursor-pointer hover:bg-white/[0.06] transition-colors">
-                      <input type="radio" name="payment" defaultChecked={m.value === 'card'} className="accent-white" />
-                      <div>
-                        <div className="text-sm font-medium text-white/80">{m.label}</div>
-                        <div className="text-xs text-white/40">{m.desc}</div>
-                      </div>
-                    </label>
-                  ))}
+                    { value: 'card', label: 'Карта' },
+                    { value: 'sbp', label: 'СБП' },
+                    { value: 'crypto', label: 'Crypto' },
+                  ].map((m) => {
+                    return (
+                      <label key={m.value} className={`flex items-center justify-center gap-1 bg-white/[0.03] border rounded-xl px-3 py-2.5 cursor-pointer transition-all duration-200 border-white/[0.06] has-[:checked]:border-white has-[:checked]:bg-white/[0.08]`}>
+                        <input type="radio" name="payment" checked={payment === m.value} onChange={() => setPayment(m.value)} className="sr-only peer" />
+                        {m.value === 'sbp' ? (
+                          <svg viewBox="0 0 97 120" fill="none" className="h-4 peer-checked:opacity-100 opacity-60 w-auto" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M0 26.12l14.532 25.975v15.844L.017 93.863z" fill="#5b57a2"/>
+                            <path d="M55.797 42.643l13.617-8.346 27.868-.026-41.485 25.414z" fill="#d90751"/>
+                            <path d="M55.72 25.967l.077 34.39-14.566-8.95V0l14.49 25.967z" fill="#fab718"/>
+                            <path d="M97.282 34.271l-27.869.026-13.693-8.33L41.231 0l56.05 34.271z" fill="#ed6f26"/>
+                            <path d="M55.797 94.007V77.322l-14.566-8.78.008 51.458z" fill="#63b22f"/>
+                            <path d="M69.38 85.737L14.531 52.095 0 26.12l97.223 59.583-27.844.034z" fill="#1487c9"/>
+                            <path d="M41.24 120l14.556-25.993 13.583-8.27 27.843-.034z" fill="#017f36"/>
+                            <path d="M.017 93.863l41.333-25.32-13.896-8.526-12.922 7.922z" fill="#984995"/>
+                          </svg>
+                        ) : m.value === 'card' ? (
+                          <CreditCard className="w-4 h-4 text-white/50 peer-checked:text-white" />
+                        ) : (
+                          <svg viewBox="0 0 650 645" fill="none" className="h-4 peer-checked:opacity-100 opacity-60 w-auto" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M31.08,322c0-236.43,68.1-304.54,304.54-304.54S640.16,85.52,640.16,322,572.05,626.5,335.62,626.5,31.08,558.39,31.08,322Z" fill="#1c39bb"/>
+                            <path d="M408.93,235.6h76.21a48.58,48.58,0,0,1,48.57,48.57v94.56a29.58,29.58,0,0,1-29.58,29.58h0V283.74a19,19,0,0,0-19-19H409.72a19,19,0,0,0-14.7,7L373.5,298.32l-19.1-23.38,17.78-21.88A47.38,47.38,0,0,1,408.93,235.6Z" fill="#fff"/>
+                            <path d="M298,390.85a47.41,47.41,0,0,1-36.75,17.46H186.1a48.58,48.58,0,0,1-48.58-48.57V284.17A48.58,48.58,0,0,1,186.1,235.6h75.42a47.4,47.4,0,0,1,36.75,17.46l97,119.11a19,19,0,0,0,14.7,7H474.5v29.16H409.21a47.4,47.4,0,0,1-36.75-17.46l-97-119.09a19,19,0,0,0-14.7-7H186.07a19,19,0,0,0-19,19v76.45a19,19,0,0,0,19,19h74.37a18.94,18.94,0,0,0,14.69-7L297,345.39l19,23.37Z" fill="#fff"/>
+                          </svg>
+                        )}
+                        <span className="text-sm text-white/70 peer-checked:text-white">{m.label}</span>
+                      </label>
+                    )
+                  })}
                 </div>
               </div>
-              <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl px-4 py-3">
-                <div className="text-xs text-white/40 mb-2">Состав заказа</div>
-                <div className="space-y-1.5">
+              <div className="relative bg-white/[0.02] border border-white/[0.06] rounded-xl px-4 py-3 overflow-hidden before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/15 before:to-transparent">
+                <div className="flex items-center justify-between text-xs text-white/40 mb-1.5">Состав заказа <span className="text-white/60">{cart.length} шт.</span></div>
+                <div className="space-y-1">
                   {cart.map((item, i) => (
                     <div key={i} className="flex items-center justify-between text-sm">
-                      <span className="text-white/70">{item.label}</span>
-                      <span className="text-white/50">${item.priceUSD}</span>
+                      <div>
+                        <span className="text-white/70">{item.label}</span>
+                        <span className="text-white/30 ml-1.5 text-[11px]">${item.priceUSD}</span>
+                      </div>
+                      <span className="text-white/50">{item.priceRUB} ₽</span>
                     </div>
                   ))}
                 </div>
-                <div className="border-t border-white/[0.06] mt-3 pt-3 flex items-center justify-between text-sm">
+                <div className="border-t border-white/[0.06] mt-2 pt-2 flex items-center justify-between text-sm">
                   <span className="text-white/50">Итого</span>
-                  <span className="font-semibold text-white">${cart.reduce((s, i) => s + i.priceUSD, 0).toFixed(2)}</span>
+                  <span className="font-semibold text-white">{cart.reduce((s, i) => s + i.priceRUB, 0).toFixed(2)} ₽</span>
                 </div>
               </div>
             </div>
-            <div className="border-t border-white/[0.06] px-5 py-4">
-              <button
-                className="w-full text-center px-4 py-3 bg-white text-[#070708] font-semibold text-sm rounded-xl hover:bg-gray-100 transition-colors"
-              >
-                Отправить заказ
-              </button>
+            <div className="border-t border-white/[0.06] px-4 py-3">
+              {submitted ? (
+                <div className="text-center text-sm text-emerald-400 py-2">✓ Заказ отправлен! Мы свяжемся с вами в ближайшее время.</div>
+              ) : (
+                <button onClick={async () => {
+                  setSubmitting(true)
+                  try {
+                    await fetch('/api/order', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        email,
+                        discordEmail,
+                        discordPassword,
+                        telegram,
+                        payment,
+                        cart: cart.map(i => ({ label: i.label, priceRUB: i.priceRUB, priceUSD: i.priceUSD })),
+                        total: cart.reduce((s, i) => s + i.priceRUB, 0).toFixed(2)
+                      })
+                    })
+                    setSubmitted(true)
+                    setTimeout(resetCheckout, 3000)
+                  } catch (e) {
+                    alert('Ошибка отправки. Попробуйте ещё раз.')
+                  } finally {
+                    setSubmitting(false)
+                  }
+                }} disabled={submitting} className="w-full text-center px-4 py-2.5 bg-white text-[#070708] font-semibold text-sm rounded-xl hover:bg-gray-100 transition-colors disabled:opacity-50">
+                  {submitting ? 'Отправка...' : 'Отправить заказ'}
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -560,6 +645,14 @@ function App() {
         </div>
       )}
 
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-fade-in">
+          <div className="bg-white/10 backdrop-blur-md border border-white/15 text-white/90 text-sm px-5 py-2.5 rounded-xl shadow-[0_10px_30px_-10px_rgba(0,0,0,0.5)]">
+            {toast}
+          </div>
+        </div>
+      )}
+
       <div className="relative w-full h-full slide-viewport">
         {/* Slide 0: Hero */}
         <div
@@ -571,7 +664,7 @@ function App() {
             <div className="flex flex-col items-center justify-center h-full px-6 max-w-4xl mx-auto">
               <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.04)_0%,transparent_60%)]" />
               <div className="animate-fade-in text-center" style={{ animationDelay: '0.1s' }}>
-                <span className="inline-block text-[10px] tracking-[0.3em] uppercase text-white/30 bg-white/[0.04] px-5 py-2 rounded-full">Castello Shop</span>
+                <span className="relative inline-block text-[10px] tracking-[0.3em] uppercase text-white/30 bg-white/[0.04] px-5 py-2 rounded-full overflow-hidden before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/15 before:to-transparent">Castello Shop</span>
               </div>
               <div className="animate-fade-in mt-4 text-center" style={{ animationDelay: '0.2s' }}>
                 <h1 className="text-4xl xs:text-5xl sm:text-7xl md:text-8xl font-bold tracking-tight leading-none">
@@ -613,7 +706,7 @@ function App() {
             <div className="overflow-y-auto h-full px-4 sm:px-6 max-w-5xl mx-auto flex flex-col justify-center items-center py-8">
               <SectionHeading label="Каталог" title="Цены на украшения и наборы" />
 
-              <div className="flex justify-center gap-2 mb-4 flex-wrap">
+              <div className="flex justify-center gap-2 mb-2 flex-wrap">
                 {[
                   { key: 'decorations' as const, label: 'Украшения' },
                   { key: 'bundles' as const, label: 'Наборы' },
@@ -632,8 +725,8 @@ function App() {
 
               <div className="flex justify-center gap-2 mb-6 flex-wrap">
                 {[
-                  { key: 'with-nitro' as const, label: 'С Nitro' },
                   { key: 'no-nitro' as const, label: 'Без Nitro' },
+                  { key: 'with-nitro' as const, label: 'С Nitro' },
                 ].map((tab) => (
                   <button key={tab.key} onClick={() => setNitroFilter(tab.key)}
                     className={`px-3 xs:px-5 py-1.5 xs:py-2 rounded-lg text-[10px] xs:text-xs font-medium tracking-wider transition-all duration-200 ${
@@ -648,10 +741,10 @@ function App() {
               </div>
 
               <PriceGrid
-                key={`${category}-${nitroFilter}`}
+                key={`${category}-${catalogSeq}`}
                 items={currentItems}
                 filler={category === 'bundles' ? { label: 'Свой вариант', desc: 'Напиши в бот' } : undefined}
-                tabKey={`${category}-${nitroFilter}`}
+                tabKey={category}
                 onAdd={onAdd}
               />
 
@@ -681,7 +774,7 @@ function App() {
 
               <div className="relative w-full max-w-3xl mx-auto mt-2 sm:mt-4">
                 {/* Central line */}
-                <div className="absolute left-6 sm:left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-white/[0.15] via-white/[0.06] to-transparent -translate-x-1/2" />
+                <div className="absolute left-6 sm:left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-white/[0.08] via-white/[0.03] to-transparent -translate-x-1/2" />
 
                 {[
                   { step: '01', title: 'Оформление заказа', desc: 'Добавьте товары в корзину и укажите данные Discord.' },
@@ -696,46 +789,56 @@ function App() {
                     <div key={item.step} className={`relative flex items-start gap-6 sm:gap-0 ${isLeft ? 'sm:flex-row' : 'sm:flex-row-reverse'} animate-fade-in mb-2 sm:mb-0`} style={{ animationDelay: `${0.05 + i * 0.1}s` }}>
                       {/* Dot on the line */}
                       <div className="relative z-10 shrink-0 w-12 sm:w-0 flex items-center justify-center">
-                        <div className="w-3 h-3 rounded-full bg-white/20 border-2 border-[#070708] shadow-[0_0_0_4px_rgba(255,255,255,0.04)] sm:absolute sm:left-1/2 sm:-translate-x-1/2" />
+                        <div className="w-3 h-3 rounded-full bg-white/10 border border-white/20 shadow-[0_0_12px_rgba(255,255,255,0.06)] sm:absolute sm:left-1/2 sm:-translate-x-1/2" />
+                        <div className="absolute w-3 h-3 rounded-full bg-white/10 animate-ping opacity-50 sm:left-1/2 sm:-translate-x-1/2" style={{ animationDuration: '2.5s' }} />
                       </div>
 
                       {/* Card */}
                       <div className={`flex-1 sm:w-1/2 ${isLeft ? 'sm:pr-10 sm:text-right' : 'sm:pl-10'}`}>
-                        <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-4 sm:p-5 overflow-hidden">
-                          <div className={`flex items-center gap-4 sm:gap-5 ${isLeft ? 'sm:flex-row-reverse' : ''}`}>
-                            <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-white/[0.06] border border-white/[0.08] flex items-center justify-center shrink-0">
+                        <div className={`relative bg-white/[0.015] backdrop-blur-sm border border-white/[0.06] rounded-2xl p-4 sm:p-5 overflow-hidden transition-all duration-1000 group before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/15 before:to-transparent hover:before:via-white/25 after:content-[''] after:absolute after:top-2 after:right-2 after:w-1 after:h-1 after:rounded-full after:bg-white/10 after:opacity-0 group-hover:after:opacity-100 after:transition-opacity after:duration-300
+                          ${isLeft ? 'sm:hover:-translate-y-1 sm:hover:translate-x-1' : 'sm:hover:-translate-y-1 sm:hover:-translate-x-1'}
+                          hover:bg-white/[0.03] hover:border-white/[0.1] hover:shadow-[0_20px_50px_-12px_rgba(255,255,255,0.06)]
+                        `}>
+                          {/* Background step number */}
+                          <div className={`absolute -top-2 ${isLeft ? 'sm:-left-2' : 'sm:-right-2'} text-[90px] sm:text-[110px] font-bold leading-none select-none pointer-events-none text-white opacity-[0.02]`}>
+                            {item.step}
+                          </div>
+
+                          <div className={`relative flex items-center gap-4 sm:gap-5 ${isLeft ? 'sm:flex-row-reverse' : ''}`}>
+                            {/* Icon container */}
+                            <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center shrink-0 group-hover:bg-white/[0.06] group-hover:border-white/[0.1] transition-all duration-300">
                               {i === 0 ? (
-                                <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6 text-white/50" />
+                                <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6 text-white/40 group-hover:text-white/60 transition-colors" />
                               ) : i === 1 ? (
-                                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white/40 group-hover:text-white/60 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                                   <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
                                 </svg>
                               ) : i === 2 ? (
-                                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white/40 group-hover:text-white/60 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" />
                                 </svg>
                               ) : i === 3 ? (
-                                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white/40 group-hover:text-white/60 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
                                 </svg>
                               ) : i === 4 ? (
-                                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white/40 group-hover:text-white/60 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                               ) : (
-                                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white/40 group-hover:text-white/60 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                               )}
                             </div>
                             <div className={`flex-1 min-w-0 ${isLeft ? 'sm:text-right' : ''}`}>
-                              <div className={`flex items-center gap-2 ${isLeft ? 'sm:flex-row-reverse' : ''}`}>
-                                <span className={`text-[10px] sm:text-[11px] tracking-wider font-mono ${i === 0 ? 'text-sky-400/30' : i === 1 ? 'text-emerald-400/30' : i === 2 ? 'text-amber-400/30' : i === 3 ? 'text-rose-400/30' : i === 4 ? 'text-violet-400/30' : 'text-emerald-400/30'}`}>
+                              <div className={`flex items-center gap-2 ${isLeft ? 'sm:flex-row-reverse sm:justify-end' : ''}`}>
+                                <span className="text-[10px] sm:text-[11px] tracking-wider font-mono text-white/20">
                                   {item.step}
                                 </span>
-                                <h3 className="text-sm sm:text-base font-semibold text-white/80">{item.title}</h3>
+                                <h3 className="text-sm sm:text-base font-semibold text-white/70 group-hover:text-white/90 transition-colors">{item.title}</h3>
                               </div>
-                              <p className="text-white/40 text-xs sm:text-sm mt-0.5 leading-relaxed">{item.desc}</p>
+                              <p className="text-white/30 text-xs sm:text-sm mt-0.5 leading-relaxed">{item.desc}</p>
                             </div>
                           </div>
                         </div>
@@ -755,7 +858,7 @@ function App() {
           style={{ zIndex: 0 }}
         >
           <SlideFade active={slide === 3} delay={100}>
-            <div className="overflow-y-auto h-full px-4 sm:px-6 max-w-2xl mx-auto flex flex-col items-center justify-center py-6">
+            <div key={`payment-${paymentSeq}`} className="overflow-y-auto h-full px-4 sm:px-6 max-w-2xl mx-auto flex flex-col items-center justify-center py-6">
               <span className="inline-flex items-center gap-1.5 text-[10px] tracking-[0.2em] uppercase text-white/30 bg-white/[0.04] px-4 py-1.5 rounded-full mb-3">
                 <svg className="w-3 h-3 text-white/30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
@@ -767,7 +870,7 @@ function App() {
 
               {/* Credit Card Visual */}
               <TiltCard className="relative w-full max-w-xs mx-auto mb-6 sm:mb-8 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-                <div className="relative aspect-[1.586/1] rounded-2xl bg-gradient-to-br from-white/[0.08] via-white/[0.04] to-transparent border border-white/[0.08] p-5 sm:p-6 overflow-hidden">
+                <div className="relative aspect-[1.586/1] rounded-2xl bg-gradient-to-br from-white/[0.08] via-white/[0.04] to-transparent border border-white/[0.08] p-5 sm:p-6 overflow-hidden before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent">
                   <div className="absolute -top-12 -right-12 w-36 h-36 rounded-full bg-gradient-to-br from-white/[0.06] to-transparent blur-xl" />
                   <div className="absolute -bottom-8 -left-8 w-24 h-24 rounded-full bg-gradient-to-tr from-white/[0.04] to-transparent blur-lg" />
                   <div className="relative flex flex-col justify-between h-full">
@@ -821,19 +924,19 @@ function App() {
                     ),
                   },
                 ].map((method, i) => (
-                  <div key={method.label}
-                    className="relative flex sm:flex-col items-center sm:text-center gap-3 sm:gap-3 bg-white/[0.03] border border-white/[0.06] rounded-2xl p-3 sm:p-4 sm:pt-6 animate-fade-in overflow-hidden"
-                    style={{ animationDelay: `${0.2 + i * 0.1}s` }}>
-                    <div className="relative shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/[0.06] border border-white/[0.06] flex items-center justify-center">
+                  <TiltCard key={method.label}
+                    className="relative flex sm:flex-col items-center sm:text-center gap-3 sm:gap-3 bg-white/[0.03] border border-white/[0.06] rounded-2xl p-3 sm:p-4 sm:pt-6 animate-fade-in overflow-hidden group cursor-default hover:bg-white/[0.03] hover:border-white/[0.1] hover:shadow-[0_20px_50px_-12px_rgba(255,255,255,0.06)] transition-all duration-1000 ease-[cubic-bezier(0.25,0.46,0.45,0.94)] before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/15 before:to-transparent hover:before:via-white/25 after:content-[''] after:absolute after:top-2 after:right-2 after:w-1 after:h-1 after:rounded-full after:bg-white/10 after:opacity-0 group-hover:after:opacity-100 after:transition-opacity after:duration-1000"
+                    style={{ animationDelay: `${0.1 + i * 0.08}s` }}>
+                    <div className="shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/[0.06] border border-white/[0.06] flex items-center justify-center">
                       <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                         {method.icon}
                       </svg>
                     </div>
-                    <div className="relative">
+                    <div>
                       <div className="text-sm sm:text-base font-semibold text-white/80">{method.label}</div>
                       <p className="text-white/30 text-xs sm:text-sm mt-0.5">{method.desc}</p>
                     </div>
-                  </div>
+                  </TiltCard>
                 ))}
               </div>
             </div>
@@ -866,7 +969,7 @@ function App() {
         >
           <SlideFade active={slide === 5} delay={100}>
             <div className="overflow-y-auto h-full px-4 sm:px-6 max-w-3xl mx-auto flex flex-col items-center justify-center py-6">
-              <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl sm:rounded-3xl p-5 sm:p-10 text-center hover:bg-white/[0.03] transition-colors">
+              <div className="relative bg-white/[0.02] border border-white/[0.06] rounded-2xl sm:rounded-3xl p-5 sm:p-10 text-center hover:bg-white/[0.03] transition-colors overflow-hidden group before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/15 before:to-transparent hover:before:via-white/25 after:content-[''] after:absolute after:top-3 after:right-3 after:w-1 after:h-1 after:rounded-full after:bg-white/10 after:opacity-0 group-hover:after:opacity-100 after:transition-opacity after:duration-300">
                 <span className="inline-block text-[10px] tracking-[0.25em] uppercase text-white/30 bg-white/[0.04] px-4 py-1.5 rounded-full mb-3">Сообщество</span>
                 <h2 className="text-2xl sm:text-3xl font-bold mt-2">Присоединяйтесь к Discord</h2>
                 <p className="text-white/40 text-sm sm:text-base mt-2 max-w-lg mx-auto leading-relaxed">
@@ -900,7 +1003,7 @@ function App() {
 
               <footer className="flex flex-col items-center text-center mt-30 border-t border-white/[0.04] pt-3 sm:pt-4 animate-fade-in" style={{ animationDelay: '2s' }}>
                 <p className="mb-2 text-white/20 text-[10px] sm:text-xs">Castello Shop &copy; {new Date().getFullYear()}</p>
-                <div className="bg-white/[0.04] border border-white/[0.06] rounded-2xl px-4 py-3 inline-block">
+                <div className="relative bg-white/[0.04] border border-white/[0.06] rounded-2xl px-4 py-3 inline-block overflow-hidden before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/15 before:to-transparent">
                   <p className="text-white/60 text-xs sm:text-sm font-medium mb-1">ИП Бережной Егор Станиславович</p>
                   <p className="text-white/30 text-[10px] sm:text-xs">ИНН 910824288444 &nbsp;|&nbsp; ОГРНИП 325911200146721</p>
                 </div>
