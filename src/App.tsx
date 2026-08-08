@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { ShoppingCart, Plus, Check, Menu, X, CreditCard } from 'lucide-react'
+import { ShoppingCart, Plus, Check, Menu, X } from 'lucide-react'
 import { SpeedInsights } from '@vercel/speed-insights/react'
 
 function SlideFade({ active, delay = 0, children, className }: { active: boolean; delay?: number; children: React.ReactNode; className?: string }) {
@@ -247,17 +247,8 @@ function App() {
     try { const v = localStorage.getItem('cart'); return v ? JSON.parse(v) : [] } catch { return [] }
   })
   const [cartOpen, setCartOpen] = useState(false)
-  const [checkoutOpen, setCheckoutOpen] = useState(false)
   const [toast, setToast] = useState('')
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
-  const [email, setEmail] = useState('')
-  const [discordEmail, setDiscordEmail] = useState('')
-  const [discordPassword, setDiscordPassword] = useState('')
-  const [telegram, setTelegram] = useState('')
-  const [payment, setPayment] = useState('card')
-  const [submitting, setSubmitting] = useState(false)
-  const [submitted, setSubmitted] = useState(false)
-  const resetCheckout = () => { setCheckoutOpen(false); setSubmitted(false); setSubmitting(false); setEmail(''); setDiscordEmail(''); setDiscordPassword(''); setTelegram(''); setPayment('card'); setCart([]) }
 
   const onAdd = (item: PriceItem) => {
     setCart(prev => [...prev, item])
@@ -273,7 +264,9 @@ function App() {
   const prevSlide = useRef(slide)
   const [catalogSeq, setCatalogSeq] = useState(0)
   const [paymentSeq, setPaymentSeq] = useState(0)
-  useEffect(() => { localStorage.setItem('cart', JSON.stringify(cart)) }, [cart])
+  useEffect(() => {
+    try { localStorage.setItem('cart', JSON.stringify(cart)) } catch { /* хранилище недоступно (приватный режим, блокировка cookie, in-app браузер) */ }
+  }, [cart])
   useEffect(() => {
     if (slide === 1 && prevSlide.current !== 1) setCatalogSeq(s => s + 1)
     if (slide === 3 && prevSlide.current !== 3) setPaymentSeq(s => s + 1)
@@ -500,133 +493,9 @@ function App() {
                       {cart.reduce((s, i) => s + i.priceRUB, 0).toFixed(2)} ₽
                     </span>
                   </div>
-                  <button onClick={() => { setCartOpen(false); setCheckoutOpen(true) }}
-                    className="block w-full text-center px-4 py-3 bg-white text-[#070708] font-semibold text-sm rounded-xl hover:bg-gray-100 transition-colors"
-                  >
-                    Оформить заказ
-                  </button>
                 </div>
               </>
             )}
-          </div>
-        </div>
-      )}
-
-      {checkoutOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={resetCheckout} />
-          <div className="relative w-full max-w-xl bg-[#070708] border border-white/[0.08] rounded-2xl animate-fade-in flex flex-col overflow-hidden before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/15 before:to-transparent">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
-              <span className="text-sm font-medium text-white/80">Оформление заказа</span>
-              <button onClick={resetCheckout} className="w-7 h-7 rounded-lg bg-white/[0.06] flex items-center justify-center hover:bg-white/15 transition-colors">
-                <X className="w-4 h-4 text-white/60" />
-              </button>
-            </div>
-            <div className="px-4 py-3 space-y-3">
-              <div>
-                <label className="text-xs text-white/40 mb-1.5 block">Email для заказа</label>
-                <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="your@email.com" className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-sm text-white/80 placeholder:text-white/20 outline-none focus:border-white/20 transition-colors" />
-              </div>
-              <div>
-                <label className="text-xs text-white/40 mb-1.5 block">Telegram для связи</label>
-                <input type="text" value={telegram} onChange={e => setTelegram(e.target.value)} placeholder="@username" className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-sm text-white/80 placeholder:text-white/20 outline-none focus:border-white/20 transition-colors" />
-              </div>
-              <div>
-                <label className="text-xs text-white/40 mb-1.5 block">Почта Discord</label>
-                <input type="email" value={discordEmail} onChange={e => setDiscordEmail(e.target.value)} placeholder="discord@email.com" className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-sm text-white/80 placeholder:text-white/20 outline-none focus:border-white/20 transition-colors" />
-              </div>
-              <div>
-                <label className="text-xs text-white/40 mb-1.5 block">Пароль Discord</label>
-                <input type="password" value={discordPassword} onChange={e => setDiscordPassword(e.target.value)} placeholder="••••••••" className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-sm text-white/80 placeholder:text-white/20 outline-none focus:border-white/20 transition-colors" />
-              </div>
-              <div>
-                <label className="text-xs text-white/40 mb-1.5 block">Способ оплаты</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { value: 'card', label: 'Карта' },
-                    { value: 'sbp', label: 'СБП' },
-                    { value: 'crypto', label: 'Crypto' },
-                  ].map((m) => {
-                    return (
-                      <label key={m.value} className={`flex items-center justify-center gap-1 bg-white/[0.03] border rounded-xl px-3 py-2.5 cursor-pointer transition-all duration-200 border-white/[0.06] has-[:checked]:border-white has-[:checked]:bg-white/[0.08]`}>
-                        <input type="radio" name="payment" checked={payment === m.value} onChange={() => setPayment(m.value)} className="sr-only peer" />
-                        {m.value === 'sbp' ? (
-                          <svg viewBox="0 0 97 120" fill="none" className="h-4 peer-checked:opacity-100 opacity-60 w-auto" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M0 26.12l14.532 25.975v15.844L.017 93.863z" fill="#5b57a2"/>
-                            <path d="M55.797 42.643l13.617-8.346 27.868-.026-41.485 25.414z" fill="#d90751"/>
-                            <path d="M55.72 25.967l.077 34.39-14.566-8.95V0l14.49 25.967z" fill="#fab718"/>
-                            <path d="M97.282 34.271l-27.869.026-13.693-8.33L41.231 0l56.05 34.271z" fill="#ed6f26"/>
-                            <path d="M55.797 94.007V77.322l-14.566-8.78.008 51.458z" fill="#63b22f"/>
-                            <path d="M69.38 85.737L14.531 52.095 0 26.12l97.223 59.583-27.844.034z" fill="#1487c9"/>
-                            <path d="M41.24 120l14.556-25.993 13.583-8.27 27.843-.034z" fill="#017f36"/>
-                            <path d="M.017 93.863l41.333-25.32-13.896-8.526-12.922 7.922z" fill="#984995"/>
-                          </svg>
-                        ) : m.value === 'card' ? (
-                          <CreditCard className="w-4 h-4 text-white/50 peer-checked:text-white" />
-                        ) : (
-                          <svg viewBox="0 0 650 645" fill="none" className="h-4 peer-checked:opacity-100 opacity-60 w-auto" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M31.08,322c0-236.43,68.1-304.54,304.54-304.54S640.16,85.52,640.16,322,572.05,626.5,335.62,626.5,31.08,558.39,31.08,322Z" fill="#1c39bb"/>
-                            <path d="M408.93,235.6h76.21a48.58,48.58,0,0,1,48.57,48.57v94.56a29.58,29.58,0,0,1-29.58,29.58h0V283.74a19,19,0,0,0-19-19H409.72a19,19,0,0,0-14.7,7L373.5,298.32l-19.1-23.38,17.78-21.88A47.38,47.38,0,0,1,408.93,235.6Z" fill="#fff"/>
-                            <path d="M298,390.85a47.41,47.41,0,0,1-36.75,17.46H186.1a48.58,48.58,0,0,1-48.58-48.57V284.17A48.58,48.58,0,0,1,186.1,235.6h75.42a47.4,47.4,0,0,1,36.75,17.46l97,119.11a19,19,0,0,0,14.7,7H474.5v29.16H409.21a47.4,47.4,0,0,1-36.75-17.46l-97-119.09a19,19,0,0,0-14.7-7H186.07a19,19,0,0,0-19,19v76.45a19,19,0,0,0,19,19h74.37a18.94,18.94,0,0,0,14.69-7L297,345.39l19,23.37Z" fill="#fff"/>
-                          </svg>
-                        )}
-                        <span className="text-sm text-white/70 peer-checked:text-white">{m.label}</span>
-                      </label>
-                    )
-                  })}
-                </div>
-              </div>
-              <div className="relative bg-white/[0.02] border border-white/[0.06] rounded-xl px-4 py-3 overflow-hidden before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/15 before:to-transparent">
-                <div className="flex items-center justify-between text-xs text-white/40 mb-1.5">Состав заказа <span className="text-white/60">{cart.length} шт.</span></div>
-                <div className="space-y-1">
-                  {cart.map((item, i) => (
-                    <div key={i} className="flex items-center justify-between text-sm">
-                      <div>
-                        <span className="text-white/70">{item.label}</span>
-                        <span className="text-white/30 ml-1.5 text-[11px]">${item.priceUSD}</span>
-                      </div>
-                      <span className="text-white/50">{item.priceRUB} ₽</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="border-t border-white/[0.06] mt-2 pt-2 flex items-center justify-between text-sm">
-                  <span className="text-white/50">Итого</span>
-                  <span className="font-semibold text-white">{cart.reduce((s, i) => s + i.priceRUB, 0).toFixed(2)} ₽</span>
-                </div>
-              </div>
-            </div>
-            <div className="border-t border-white/[0.06] px-4 py-3">
-              {submitted ? (
-                <div className="text-center text-sm text-emerald-400 py-2">✓ Заказ отправлен! Мы свяжемся с вами в ближайшее время.</div>
-              ) : (
-                <button onClick={async () => {
-                  setSubmitting(true)
-                  try {
-                    await fetch('/api/order', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        email,
-                        discordEmail,
-                        discordPassword,
-                        telegram,
-                        payment,
-                        cart: cart.map(i => ({ label: i.label, priceRUB: i.priceRUB, priceUSD: i.priceUSD })),
-                        total: cart.reduce((s, i) => s + i.priceRUB, 0).toFixed(2)
-                      })
-                    })
-                    setSubmitted(true)
-                    setTimeout(resetCheckout, 3000)
-                  } catch (e) {
-                    alert('Ошибка отправки. Попробуйте ещё раз.')
-                  } finally {
-                    setSubmitting(false)
-                  }
-                }} disabled={submitting} className="w-full text-center px-4 py-2.5 bg-white text-[#070708] font-semibold text-sm rounded-xl hover:bg-gray-100 transition-colors disabled:opacity-50">
-                  {submitting ? 'Отправка...' : 'Отправить заказ'}
-                </button>
-              )}
-            </div>
           </div>
         </div>
       )}
