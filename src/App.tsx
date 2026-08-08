@@ -183,8 +183,12 @@ function CursorTrail() {
   const dotsRef = useRef<HTMLDivElement[]>([])
   const pos = useRef({ x: 0, y: 0 })
   const raf = useRef(0)
+  // На тач-устройствах мыши нет, но rAF-цикл и mix-blend-difference на 10 точках
+  // всё равно пересчитывались бы каждый кадр — чистая трата кадрового бюджета.
+  const [enabled] = useState(() => typeof window !== 'undefined' && window.matchMedia('(hover: hover) and (pointer: fine)').matches)
 
   useEffect(() => {
+    if (!enabled) return
     const dots = dotsRef.current
     const onMove = (e: MouseEvent) => {
       pos.current = { x: e.clientX, y: e.clientY }
@@ -213,7 +217,9 @@ function CursorTrail() {
       window.removeEventListener('mousemove', onMove)
       cancelAnimationFrame(raf.current)
     }
-  }, [])
+  }, [enabled])
+
+  if (!enabled) return null
 
   return (
     <div className="fixed inset-0 pointer-events-none z-50" style={{ isolation: 'isolate' }}>
@@ -391,11 +397,14 @@ function App() {
 
   return (
     <div className="bg-[#070708] text-white h-svh overflow-hidden" onMouseMove={onMouseMove} onWheel={handleWheel}>
-      <SpeedInsights />
-      <Analytics />
+      {/* Пути проксируются через /cst/* (см. rewrites в vercel.json): штатные
+          /_vercel/insights/* и /_vercel/speed-insights/* стоят в списках
+          блокировщиков, и у части посетителей запросы просто не уходят. */}
+      <SpeedInsights scriptSrc="/cst/s.js" endpoint="/cst/sv" />
+      <Analytics scriptSrc="/cst/i.js" viewEndpoint="/cst/iv" eventEndpoint="/cst/ie" />
       <CursorTrail />
-      <div className="fixed inset-0 pointer-events-none -z-0 opacity-[0.03]" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`, backgroundRepeat: 'repeat', backgroundSize: '200px 200px' }} />
-      <div className="fixed inset-0 pointer-events-none overflow-hidden -z-0">
+      <div className="fixed inset-0 pointer-events-none -z-0 opacity-[0.03]" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`, backgroundRepeat: 'repeat', backgroundSize: '200px 200px' }} />
+      <div className="decor-orbs fixed inset-0 pointer-events-none overflow-hidden -z-0">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-white/[0.015] rounded-full blur-[120px] transition-transform duration-700 ease-out" style={{ transform: `translate(${mousePos.x * 30}px, ${mousePos.y * 30}px)` }} />
         <div className="absolute top-1/3 right-1/4 w-[500px] h-[500px] bg-white/[0.01] rounded-full blur-[150px] transition-transform duration-900 ease-out" style={{ transform: `translate(${mousePos.x * -25}px, ${mousePos.y * -25}px)` }} />
         <div className="absolute bottom-1/4 left-1/3 w-80 h-80 bg-white/[0.008] rounded-full blur-[100px] transition-transform duration-600 ease-out" style={{ transform: `translate(${mousePos.x * 20}px, ${mousePos.y * -20}px)` }} />

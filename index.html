@@ -6,6 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Castello Shop — Telegram-магазин</title>
     <meta name="description" content="Castello Shop — товары с быстрой доставкой через Telegram." />
+    <!-- Без этого браузер узнаёт о шрифтах только после загрузки и парсинга CSS —
+         лишний круг запросов, на мобильной сети это заметные сотни миллисекунд. -->
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="/fonts/inter-cyrillic-wght-normal.woff2" />
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="/fonts/inter-latin-wght-normal.woff2" />
+    <!-- Фон до загрузки CSS, иначе на мобильном видна белая вспышка. -->
+    <style>
+      html, body { margin: 0; background: #070708 }
+    </style>
   </head>
   <body>
     <div id="root"></div>
