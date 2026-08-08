@@ -26,6 +26,7 @@
 @theme {
   --font-sans: 'Inter Variable', Inter, system-ui, sans-serif;
   --animate-fade-in: fade-in 0.5s ease-out both;
+  --animate-rise-in: rise-in 0.5s ease-out both;
   --animate-slide-in-right: slide-in-right 0.25s ease-out;
   --animate-card-enter: card-enter 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
   --breakpoint-xs: 20rem;
@@ -34,6 +35,13 @@
 @keyframes fade-in {
   from { opacity: 0 }
   to { opacity: 1 }
+}
+
+/* Появление без opacity. Элемент, впервые отрисованный прозрачным, навсегда
+   исключается из кандидатов на LCP — поэтому первый экран анимируем сдвигом. */
+@keyframes rise-in {
+  from { transform: translateY(10px) }
+  to { transform: translateY(0) }
 }
 
 @keyframes slide-in-right {
@@ -85,6 +93,14 @@ html {
   will-change: opacity;
   contain: layout style paint;
   opacity: 0;
+}
+
+/* Стартовый слайд виден с первого кадра, а не после монтирования React.
+   Класс снимается в initPath, как только проставлены инлайновые стили,
+   иначе goToSlide не смог бы погасить слайд сбросом style.opacity. */
+.slide-viewport .slide-section.slide-initial {
+  opacity: 1;
+  visibility: visible;
 }
 
 /* На тач-устройствах убираем самые дорогие для отрисовки эффекты.

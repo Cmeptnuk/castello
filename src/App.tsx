@@ -259,6 +259,17 @@ function CursorTrail() {
 }
 
 const SLIDE_KEYS = ['home', 'catalog', 'how', 'payment', 'faq', 'discord']
+
+// Считается до первого рендера: иначе нужный слайд становится видимым только
+// после монтирования, весь первый экран красится прозрачным и Chrome не находит
+// ни одного кандидата на LCP (NO_LCP в Lighthouse).
+const INITIAL_SLIDE = (() => {
+  if (typeof window === 'undefined') return 0
+  const idx = SLIDE_KEYS.indexOf(window.location.pathname.slice(1))
+  return idx >= 0 ? idx : 0
+})()
+
+const initialClass = (i: number) => (i === INITIAL_SLIDE ? ' slide-initial' : '')
 const totalSlides = SLIDE_KEYS.length
 
 function App() {
@@ -266,7 +277,7 @@ function App() {
   const [category, setCategory] = useState<CategoryTab>('decorations')
   const [nitroFilter, setNitroFilter] = useState<NitroTab>('no-nitro')
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
-  const [slide, setSlide] = useState(0)
+  const [slide, setSlide] = useState(INITIAL_SLIDE)
   const [menuOpen, setMenuOpen] = useState(false)
   const [cart, setCart] = useState<PriceItem[]>(() => {
     try { const v = localStorage.getItem('cart'); return v ? JSON.parse(v) : [] } catch { return [] }
@@ -283,7 +294,7 @@ function App() {
   }
   const removeFromCart = (index: number) => setCart(prev => prev.filter((_, i) => i !== index))
 
-  const slideRef = useRef(0)
+  const slideRef = useRef(INITIAL_SLIDE)
   const slideNodes = useRef<(HTMLDivElement | null)[]>([])
   const busyRef = useRef(false)
   const prevSlide = useRef(slide)
@@ -351,6 +362,9 @@ function App() {
       slideRef.current = start
       slideNodes.current.forEach((el, i) => {
         if (!el) return
+        // Дальше видимостью управляют инлайновые стили, класс больше не нужен
+        // и мешал бы goToSlide гасить слайд сбросом style.opacity.
+        el.classList.remove('slide-initial')
         if (i === start) {
           el.style.zIndex = ''
           el.style.opacity = '1'
@@ -556,26 +570,26 @@ function App() {
         {/* Slide 0: Hero */}
         <div
           ref={(el) => { slideNodes.current[0] = el }}
-          className="flex slide-section absolute inset-0 items-center justify-center"
+          className={`flex slide-section absolute inset-0 items-center justify-center${initialClass(0)}`}
           style={{ zIndex: 0 }}
         >
           <SlideFade active={slide === 0} delay={100}>
             <div className="flex flex-col items-center justify-center h-full px-6 max-w-4xl mx-auto">
               <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.04)_0%,transparent_60%)]" />
-              <div className="animate-fade-in text-center" style={{ animationDelay: '0.1s' }}>
+              <div className="animate-rise-in text-center" style={{ animationDelay: '0.1s' }}>
                 <span className="relative inline-block text-[10px] tracking-[0.3em] uppercase text-white/30 bg-white/[0.04] px-5 py-2 rounded-full overflow-hidden before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/15 before:to-transparent">Castello Shop</span>
               </div>
-              <div className="animate-fade-in mt-4 text-center" style={{ animationDelay: '0.2s' }}>
+              <div className="animate-rise-in mt-4 text-center" style={{ animationDelay: '0.2s' }}>
                 <h1 className="text-4xl xs:text-5xl sm:text-7xl md:text-8xl font-bold tracking-tight leading-none">
                   <span className="bg-gradient-to-r from-white via-gray-200 to-white/40 bg-clip-text text-transparent">Castello</span>
                 </h1>
               </div>
-              <div className="animate-fade-in mt-3 text-center" style={{ animationDelay: '0.35s' }}>
+              <div className="animate-rise-in mt-3 text-center" style={{ animationDelay: '0.35s' }}>
                 <p className="text-white/40 text-base sm:text-lg max-w-xl leading-relaxed">
                   Кастомизация Discord: украшения и наборы для профиля. Без Nitro и с Nitro.
                 </p>
               </div>
-              <div className="animate-fade-in mt-6" style={{ animationDelay: '0.5s' }}>
+              <div className="animate-rise-in mt-6" style={{ animationDelay: '0.5s' }}>
                 <a href="https://t.me/CastelloShop_bot" target="_blank" rel="noopener noreferrer"
                   className="group relative inline-flex items-center gap-3 px-8 py-4 bg-white text-[#070708] font-semibold text-base rounded-2xl transition-all duration-300 hover:bg-gray-100 hover:scale-[1.03] active:scale-95"
                 >
@@ -588,7 +602,7 @@ function App() {
                   </span>
                 </a>
               </div>
-              <div className="animate-fade-in mt-4 text-center" style={{ animationDelay: '0.6s' }}>
+              <div className="animate-rise-in mt-4 text-center" style={{ animationDelay: '0.6s' }}>
                   <p className="text-white/20 text-xs">Оформление заказа через сайт — быстро и безопасно</p>
               </div>
             </div>
@@ -598,7 +612,7 @@ function App() {
         {/* Slide 1: Catalog */}
         <div
           ref={(el) => { slideNodes.current[1] = el }}
-          className="slide-section absolute inset-0 flex items-center justify-center"
+          className={`slide-section absolute inset-0 flex items-center justify-center${initialClass(1)}`}
           style={{ zIndex: 0 }}
         >
           <SlideFade active={slide === 1} delay={100} className="h-full w-full">
@@ -664,7 +678,7 @@ function App() {
         {/* Slide 2: How it works */}
         <div
           ref={(el) => { slideNodes.current[2] = el }}
-          className="slide-section absolute inset-0 flex items-center justify-center"
+          className={`slide-section absolute inset-0 flex items-center justify-center${initialClass(2)}`}
           style={{ zIndex: 0 }}
         >
           <SlideFade active={slide === 2} delay={100} className="h-full w-full">
@@ -753,7 +767,7 @@ function App() {
         {/* Slide 3: Payment */}
         <div
           ref={(el) => { slideNodes.current[3] = el }}
-          className="slide-section absolute inset-0 flex items-center justify-center"
+          className={`slide-section absolute inset-0 flex items-center justify-center${initialClass(3)}`}
           style={{ zIndex: 0 }}
         >
           <SlideFade active={slide === 3} delay={100}>
@@ -845,7 +859,7 @@ function App() {
         {/* Slide 4: FAQ */}
         <div
           ref={(el) => { slideNodes.current[4] = el }}
-          className="slide-section absolute inset-0 flex items-center justify-center"
+          className={`slide-section absolute inset-0 flex items-center justify-center${initialClass(4)}`}
           style={{ zIndex: 0 }}
         >
           <SlideFade active={slide === 4} delay={100}>
@@ -863,7 +877,7 @@ function App() {
         {/* Slide 5: Discord + CTA + Footer */}
         <div
           ref={(el) => { slideNodes.current[5] = el }}
-          className="slide-section absolute inset-0 flex items-center justify-center mt-30"
+          className={`slide-section absolute inset-0 flex items-center justify-center mt-30${initialClass(5)}`}
           style={{ zIndex: 0 }}
         >
           <SlideFade active={slide === 5} delay={100}>
