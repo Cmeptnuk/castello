@@ -13,12 +13,5 @@
       ]
     }
   ],
-  "rewrites": [
-    { "source": "/cst/i.js", "destination": "/_vercel/insights/script.js" },
-    { "source": "/cst/iv", "destination": "/_vercel/insights/view" },
-    { "source": "/cst/ie", "destination": "/_vercel/insights/event" },
-    { "source": "/cst/s.js", "destination": "/_vercel/speed-insights/script.js" },
-    { "source": "/cst/sv", "destination": "/_vercel/speed-insights/vitals" },
-    { "source": "/((?!assets/|fonts/|cst/).*)", "destination": "/" }
-  ]
+  "rewrites": [{ "source": "/((?!assets/|fonts/).*)", "destination": "/" }]
 }

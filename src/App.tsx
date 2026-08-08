@@ -3,6 +3,24 @@ import { ShoppingCart, Plus, Check, Menu, X } from 'lucide-react'
 import { SpeedInsights } from '@vercel/speed-insights/react'
 import { Analytics } from '@vercel/analytics/react'
 
+/* Vercel Resilient Intake: на сборке генерируется случайный путь для скрипта и
+   приёма метрик, чтобы он не совпадал с /_vercel/*, который стоит в фильтрах
+   блокировщиков. React-сборки пакетов читают этот конфиг из
+   process.env.REACT_APP_*, которого в Vite-бандле не существует, поэтому
+   разбираем переменную сами. Нет переменной — пустой объект и прежнее поведение. */
+type ObservabilityConfig = {
+  analytics?: { scriptSrc?: string; viewEndpoint?: string; eventEndpoint?: string }
+  speedInsights?: { scriptSrc?: string; endpoint?: string }
+}
+
+const observability: ObservabilityConfig = (() => {
+  try {
+    return JSON.parse(import.meta.env.VITE_VERCEL_OBSERVABILITY_CLIENT_CONFIG || '{}')
+  } catch {
+    return {}
+  }
+})()
+
 function SlideFade({ active, delay = 0, children, className }: { active: boolean; delay?: number; children: React.ReactNode; className?: string }) {
   return (
     <div
@@ -397,11 +415,10 @@ function App() {
 
   return (
     <div className="bg-[#070708] text-white h-svh overflow-hidden" onMouseMove={onMouseMove} onWheel={handleWheel}>
-      {/* Пути проксируются через /cst/* (см. rewrites в vercel.json): штатные
-          /_vercel/insights/* и /_vercel/speed-insights/* стоят в списках
-          блокировщиков, и у части посетителей запросы просто не уходят. */}
-      <SpeedInsights scriptSrc="/cst/s.js" endpoint="/cst/sv" />
-      <Analytics scriptSrc="/cst/i.js" viewEndpoint="/cst/iv" eventEndpoint="/cst/ie" />
+      {/* Пути берутся из Resilient Intake, если Vercel их выдал на сборке —
+          иначе пакеты сами подставят штатные /_vercel/*. */}
+      <SpeedInsights {...observability.speedInsights} />
+      <Analytics {...observability.analytics} />
       <CursorTrail />
       <div className="fixed inset-0 pointer-events-none -z-0 opacity-[0.03]" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`, backgroundRepeat: 'repeat', backgroundSize: '200px 200px' }} />
       <div className="decor-orbs fixed inset-0 pointer-events-none overflow-hidden -z-0">
