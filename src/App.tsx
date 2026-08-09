@@ -1,7 +1,15 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useSyncExternalStore } from 'react'
 import { ShoppingCart, Plus, Check, Menu, X } from 'lucide-react'
 import { SpeedInsights } from '@vercel/speed-insights/react'
 import { Analytics } from '@vercel/analytics/react'
+import { SLIDE_KEYS, slideFromPath } from './slides.ts'
+
+/* Значение не меняется за время жизни страницы, поэтому подписка пустая.
+   useSyncExternalStore нужен ради серверного снимка: на сервере возвращается
+   false, и первый клиентский рендер совпадает с присланной разметкой. */
+const noSubscribe = () => () => {}
+const serverFalse = () => false
+const HOVER_QUERY = '(hover: hover) and (pointer: fine)'
 
 /* Vercel Resilient Intake: на сборке генерируется случайный путь для скрипта и
    приёма метрик, чтобы он не совпадал с /_vercel/*, который стоит в фильтрах
@@ -116,7 +124,9 @@ const bundlesWithNitro: PriceItem[] = [
 function TiltCard({ children, className, style }: { children: React.ReactNode; className?: string; style?: React.CSSProperties }) {
   const ref = useRef<HTMLDivElement>(null)
   const rectRef = useRef<DOMRect | null>(null)
-  const isTouch = useRef(typeof window !== 'undefined' && 'ontouchstart' in window)
+  // Определяется после гидратации: на сервере window нет, а решать это во время
+  // рендера значило бы отдать с сервера и с клиента разную разметку.
+  const isTouch = useSyncExternalStore(noSubscribe, () => 'ontouchstart' in window, serverFalse)
   const lift = -4
   const onEnter = () => {
     if (!ref.current) return
@@ -125,7 +135,7 @@ function TiltCard({ children, className, style }: { children: React.ReactNode; c
     ref.current.style.transform = `translateY(${lift}px)`
   }
   const onMove = (e: React.MouseEvent) => {
-    if (isTouch.current || !ref.current || !rectRef.current) return
+    if (isTouch || !ref.current || !rectRef.current) return
     const r = rectRef.current
     const x = e.clientX - r.left
     const y = e.clientY - r.top
@@ -133,12 +143,12 @@ function TiltCard({ children, className, style }: { children: React.ReactNode; c
     ref.current.style.transform = `perspective(400px) translateY(${lift}px) rotateX(${(y - r.height / 2) / 24}deg) rotateY(${(r.width / 2 - x) / 24}deg)`
   }
   const onLeave = () => {
-    if (isTouch.current || !ref.current) return
+    if (isTouch || !ref.current) return
     ref.current.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
     ref.current.style.transform = 'perspective(400px) rotateX(0deg) rotateY(0deg)'
     setTimeout(() => { if (ref.current) ref.current.style.transition = '' }, 400)
   }
-  if (isTouch.current) {
+  if (isTouch) {
     return <div className={className} style={style}>{children}</div>
   }
   return <div ref={ref} onMouseEnter={onEnter} onMouseMove={onMove} onMouseLeave={onLeave} className={className} style={style}>{children}</div>
@@ -203,7 +213,15 @@ function CursorTrail() {
   const raf = useRef(0)
   // На тач-устройствах мыши нет, но rAF-цикл и mix-blend-difference на 10 точках
   // всё равно пересчитывались бы каждый кадр — чистая трата кадрового бюджета.
-  const [enabled] = useState(() => typeof window !== 'undefined' && window.matchMedia('(hover: hover) and (pointer: fine)').matches)
+  const enabled = useSyncExternalStore(
+    (onChange) => {
+      const mq = window.matchMedia(HOVER_QUERY)
+      mq.addEventListener('change', onChange)
+      return () => mq.removeEventListener('change', onChange)
+    },
+    () => window.matchMedia(HOVER_QUERY).matches,
+    serverFalse,
+  )
 
   useEffect(() => {
     if (!enabled) return
@@ -258,51 +276,73 @@ function CursorTrail() {
   )
 }
 
-const SLIDE_KEYS = ['home', 'catalog', 'how', 'payment', 'faq', 'discord']
+/* Корзина живёт в localStorage, а его на сервере нет. Читать её прямо в
+   useState нельзя: разметка с сервера пришла бы с пустой корзиной, а первый
+   рендер клиента — с заполненной, и гидратация сломалась бы у всех, кто уже
+   что-то отложил. useSyncExternalStore решает это штатно: при гидратации
+   берётся серверный снимок, следом React перерисовывает уже с клиентским. */
+const CART_KEY = 'cart'
+const EMPTY_CART: PriceItem[] = []
+const cartListeners = new Set<() => void>()
+let cartRaw: string | null = null
+let cartSnapshot: PriceItem[] = EMPTY_CART
 
-// Считается до первого рендера: иначе нужный слайд становится видимым только
-// после монтирования, весь первый экран красится прозрачным и Chrome не находит
-// ни одного кандидата на LCP (NO_LCP в Lighthouse).
-const INITIAL_SLIDE = (() => {
-  if (typeof window === 'undefined') return 0
-  const idx = SLIDE_KEYS.indexOf(window.location.pathname.slice(1))
-  return idx >= 0 ? idx : 0
-})()
+function readCart(): PriceItem[] {
+  let raw: string | null = null
+  try { raw = localStorage.getItem(CART_KEY) } catch { /* хранилище недоступно */ }
+  // Снимок обязан быть стабильным по ссылке, иначе useSyncExternalStore
+  // уйдёт в бесконечную перерисовку — поэтому парсим только при изменении.
+  if (raw !== cartRaw) {
+    cartRaw = raw
+    try { cartSnapshot = raw ? JSON.parse(raw) : EMPTY_CART } catch { cartSnapshot = EMPTY_CART }
+  }
+  return cartSnapshot
+}
 
-const initialClass = (i: number) => (i === INITIAL_SLIDE ? ' slide-initial' : '')
+function writeCart(next: PriceItem[]) {
+  cartSnapshot = next
+  cartRaw = JSON.stringify(next)
+  try { localStorage.setItem(CART_KEY, cartRaw) } catch { /* приватный режим, блокировка cookie, in-app браузер */ }
+  cartListeners.forEach((notify) => notify())
+}
+
+const subscribeCart = (notify: () => void) => {
+  cartListeners.add(notify)
+  return () => { cartListeners.delete(notify) }
+}
+const serverCart = () => EMPTY_CART
+
 const totalSlides = SLIDE_KEYS.length
 
-function App() {
+function App({ initialSlide = 0 }: { initialSlide?: number }) {
+  // Стартовый слайд виден с первого кадра, а не после монтирования: иначе весь
+  // первый экран красится прозрачным и Chrome не находит кандидата на LCP.
+  const initialClass = (i: number) => (i === initialSlide ? ' slide-initial' : '')
   const [openFaq, setOpenFaq] = useState<number | null>(null)
   const [category, setCategory] = useState<CategoryTab>('decorations')
   const [nitroFilter, setNitroFilter] = useState<NitroTab>('no-nitro')
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
-  const [slide, setSlide] = useState(INITIAL_SLIDE)
+  const [slide, setSlide] = useState(initialSlide)
   const [menuOpen, setMenuOpen] = useState(false)
-  const [cart, setCart] = useState<PriceItem[]>(() => {
-    try { const v = localStorage.getItem('cart'); return v ? JSON.parse(v) : [] } catch { return [] }
-  })
+  const cart = useSyncExternalStore(subscribeCart, readCart, serverCart)
   const [cartOpen, setCartOpen] = useState(false)
   const [toast, setToast] = useState('')
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   const onAdd = (item: PriceItem) => {
-    setCart(prev => [...prev, item])
+    writeCart([...cart, item])
     setToast('Товар добавлен в корзину')
     clearTimeout(toastTimer.current)
     toastTimer.current = setTimeout(() => setToast(''), 2000)
   }
-  const removeFromCart = (index: number) => setCart(prev => prev.filter((_, i) => i !== index))
+  const removeFromCart = (index: number) => writeCart(cart.filter((_, i) => i !== index))
 
-  const slideRef = useRef(INITIAL_SLIDE)
+  const slideRef = useRef(initialSlide)
   const slideNodes = useRef<(HTMLDivElement | null)[]>([])
   const busyRef = useRef(false)
   const prevSlide = useRef(slide)
   const [catalogSeq, setCatalogSeq] = useState(0)
   const [paymentSeq, setPaymentSeq] = useState(0)
-  useEffect(() => {
-    try { localStorage.setItem('cart', JSON.stringify(cart)) } catch { /* хранилище недоступно (приватный режим, блокировка cookie, in-app браузер) */ }
-  }, [cart])
   useEffect(() => {
     if (slide === 1 && prevSlide.current !== 1) setCatalogSeq(s => s + 1)
     if (slide === 3 && prevSlide.current !== 3) setPaymentSeq(s => s + 1)
@@ -357,8 +397,7 @@ function App() {
   useEffect(() => {
     const initPath = () => {
       const path = window.location.pathname.slice(1)
-      const idx = SLIDE_KEYS.indexOf(path)
-      const start = idx >= 0 ? idx : 0
+      const start = slideFromPath(window.location.pathname)
       slideRef.current = start
       slideNodes.current.forEach((el, i) => {
         if (!el) return
@@ -915,7 +954,9 @@ function App() {
               </div>
 
               <footer className="flex flex-col items-center text-center mt-30 border-t border-white/[0.04] pt-3 sm:pt-4 animate-fade-in" style={{ animationDelay: '2s' }}>
-                <p className="mb-2 text-white/20 text-[10px] sm:text-xs">Castello Shop &copy; {new Date().getFullYear()}</p>
+                {/* Год на сборке и год у посетителя могут разойтись после Нового года —
+                    для React это расхождение разметки, а тут оно безобидно. */}
+                <p suppressHydrationWarning className="mb-2 text-white/20 text-[10px] sm:text-xs">Castello Shop &copy; {new Date().getFullYear()}</p>
                 <div className="relative bg-white/[0.04] border border-white/[0.06] rounded-2xl px-4 py-3 inline-block overflow-hidden before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/15 before:to-transparent">
                   <p className="text-white/60 text-xs sm:text-sm font-medium mb-1">ИП Бережной Егор Станиславович</p>
                   <p className="text-white/30 text-[10px] sm:text-xs">ИНН 910824288444 &nbsp;|&nbsp; ОГРНИП 325911200146721</p>

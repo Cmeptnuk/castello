@@ -13,5 +13,12 @@
       ]
     }
   ],
-  "rewrites": [{ "source": "/((?!assets/|fonts/).*)", "destination": "/" }]
+  "rewrites": [
+    { "source": "/catalog", "destination": "/catalog.html" },
+    { "source": "/how", "destination": "/how.html" },
+    { "source": "/payment", "destination": "/payment.html" },
+    { "source": "/faq", "destination": "/faq.html" },
+    { "source": "/discord", "destination": "/discord.html" },
+    { "source": "/((?!assets/|fonts/).*)", "destination": "/" }
+  ]
 }
