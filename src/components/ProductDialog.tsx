@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { X, Check, ShoppingCart } from 'lucide-react'
 import { DiscordIcon, TelegramIcon, ShieldCheckIcon } from './icons.tsx'
-import { useSheen } from './useSheen.ts'
 import type { CatalogCopy, PriceItem } from '../data.ts'
 
 const TITLE_ID = 'product-dialog-title'
@@ -16,7 +15,6 @@ export function ProductDialog({ item, copy, telegramUrl, onAdd, onClose }: {
   onAdd: (item: PriceItem) => void
   onClose: () => void
 }) {
-  const { ref, handlers } = useSheen<HTMLDivElement>()
   const closeRef = useRef<HTMLButtonElement>(null)
   const [added, setAdded] = useState(false)
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
@@ -48,9 +46,7 @@ export function ProductDialog({ item, copy, telegramUrl, onAdd, onClose }: {
     >
       <div className="absolute inset-0 bg-black/70 animate-fade-in" onClick={onClose} />
       <div
-        ref={ref}
-        {...handlers}
-        className="glass glass-blur glass-sheen relative w-full max-w-xl max-h-[86svh] rounded-3xl overflow-hidden flex flex-col animate-card-enter"
+        className="glass glass-blur relative w-full max-w-xl max-h-[86svh] rounded-3xl overflow-hidden flex flex-col animate-card-enter"
       >
         <button
           ref={closeRef}

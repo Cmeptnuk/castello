@@ -1,6 +1,5 @@
 import { useRef, useState } from 'react'
 import { ShoppingCart, Plus, Check } from 'lucide-react'
-import { TiltCard } from './TiltCard.tsx'
 import { DiscordIcon } from './icons.tsx'
 import type { PriceItem } from '../data.ts'
 
@@ -27,7 +26,7 @@ export function PriceGrid({ items, filler, tabKey, onAdd, onOpen }: { items: Pri
       {items.map((item, i) => {
         const justAdded = added.has(i)
         return (
-          <TiltCard
+          <div
             key={`${item.priceUSD}-${i}`}
             role="button"
             tabIndex={0}
@@ -42,7 +41,7 @@ export function PriceGrid({ items, filler, tabKey, onAdd, onOpen }: { items: Pri
                 onOpen?.(item)
               }
             }}
-            className="glass glass-sheen glass-tinted rounded-2xl p-2 sm:p-2.5 flex flex-col gap-2 sm:gap-2.5 animate-fade-in group cursor-pointer transition-[background-color] duration-500 hover:bg-white/[0.07]"
+            className="zoom-card glass glass-tinted rounded-2xl p-2 sm:p-2.5 flex flex-col gap-2 sm:gap-2.5 animate-fade-in group cursor-pointer hover:bg-white/[0.07]"
             style={{ animationDelay: `${0.05 + i * 0.08}s` }}
           >
             {/* Превью уже квадратное и обрезано на сборке: слева на арте свой
@@ -51,14 +50,19 @@ export function PriceGrid({ items, filler, tabKey, onAdd, onOpen }: { items: Pri
                 ради чего арт и нужен, — сам товар. */}
             <div className="relative aspect-square rounded-xl overflow-hidden bg-white/[0.03] ring-1 ring-inset ring-white/[0.06] transition-[box-shadow] duration-500 group-hover:ring-white/15">
               {item.thumb ? (
+                /* Не lazy: плитки лежат в скрытом слайде, и с отложенной
+                   загрузкой все восемь картинок уходили в сеть и в декодер
+                   ровно в тот кадр, когда каталог открывают. Низкий приоритет
+                   оставляет их позади первого экрана — к открытию каталога
+                   они уже в кэше. */
                 <img
                   src={item.thumb}
                   alt=""
                   width={400}
                   height={400}
-                  loading="lazy"
+                  fetchPriority="low"
                   decoding="async"
-                  className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
+                  className="w-full h-full object-cover"
                 />
               ) : (
                 /* Арт для этой группы ещё не нарисован. Пустой кадр с меткой
@@ -102,7 +106,7 @@ export function PriceGrid({ items, filler, tabKey, onAdd, onOpen }: { items: Pri
                 <Plus className={`w-3.5 h-3.5 text-white/70 absolute transition-all duration-200 ${justAdded ? 'opacity-0 scale-75' : 'opacity-0 scale-75 group-hover/add:opacity-100 group-hover/add:scale-100'}`} />
               </button>
             </div>
-          </TiltCard>
+          </div>
         )
       })}
       {filler && (

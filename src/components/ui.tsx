@@ -1,5 +1,3 @@
-import { useSheen } from './useSheen.ts'
-
 export function SlideFade({ active, delay = 0, children, className }: { active: boolean; delay?: number; children: React.ReactNode; className?: string }) {
   return (
     <div
@@ -27,13 +25,8 @@ export function SectionHeading({ label, title, align = 'center' }: { label?: str
  *  Карточки внутри своего блюра не получают: он дорожает линейно по числу
  *  слоёв, а визуально хватает того, что панель под ними уже размыта. */
 export function GlassPanel({ children, className }: { children: React.ReactNode; className?: string }) {
-  const { ref, handlers } = useSheen<HTMLDivElement>()
   return (
-    <div
-      ref={ref}
-      {...handlers}
-      className={`glass glass-blur glass-sheen rounded-3xl ${className || ''}`}
-    >
+    <div className={`glass glass-blur rounded-3xl ${className || ''}`}>
       {children}
     </div>
   )

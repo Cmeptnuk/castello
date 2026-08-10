@@ -13,7 +13,6 @@ import { PageChrome } from './components/PageChrome.tsx'
 import { PriceGrid } from './components/PriceGrid.tsx'
 import { ProductDialog } from './components/ProductDialog.tsx'
 import { FaqItem } from './components/FaqItem.tsx'
-import { TiltCard } from './components/TiltCard.tsx'
 import { CursorTrail } from './components/CursorTrail.tsx'
 import { SlideFade, SectionHeading, GlassPanel } from './components/ui.tsx'
 import { TelegramIcon, DiscordIcon, StepIcon, ShieldCheckIcon, ArrowRightIcon, CardIcon, CoinIcon, SbpIcon } from './components/icons.tsx'
@@ -98,22 +97,27 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
   const slideNodes = useRef<(HTMLDivElement | null)[]>([])
   const busyRef = useRef(false)
   const prevSlide = useRef(slide)
-  const [catalogSeq, setCatalogSeq] = useState(0)
   const [paymentSeq, setPaymentSeq] = useState(0)
 
   useEffect(() => {
-    if (slide === 1 && prevSlide.current !== 1) setCatalogSeq(s => s + 1)
     if (slide === 3 && prevSlide.current !== 3) setPaymentSeq(s => s + 1)
     prevSlide.current = slide
   }, [slide])
 
   /* Позиция курсора уезжает в CSS-переменные на корне. Раньше она лежала в
      состоянии, и каждое движение мыши перерисовывало приложение целиком
-     вместе с сеткой карточек — при том что читают её только параллакс пятен
-     и блик на стекле, то есть исключительно CSS. */
+     вместе с сеткой карточек — при том что читают её только параллакс пятен,
+     то есть исключительно CSS.
+
+     На каталоге параллакс выключен совсем. Пятна лежат под панелью, а панель
+     несёт backdrop-filter: сдвиг пятна — это не композиция, а повод пересчитать
+     блюр по всей её площади, 1150×650 на каждое движение мыши. Это самая
+     большая стеклянная поверхность сайта, и лаги при входе в категорию шли
+     именно отсюда. Само пятно за панелью всё равно не видно — видно только,
+     во что оно красит стекло, а это от сдвига на 30 пикселей не меняется. */
   useEffect(() => {
     const root = rootRef.current
-    if (!root) return
+    if (!root || slide === 1) return
     let raf = 0
     let x = 0
     let y = 0
@@ -132,7 +136,7 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
       window.removeEventListener('pointermove', onMove)
       cancelAnimationFrame(raf)
     }
-  }, [])
+  }, [slide])
 
   const goToSlide = (i: number, replace = false) => {
     const idx = Math.max(0, Math.min(i, totalSlides - 1))
@@ -433,7 +437,7 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
 
               {/* Три факта, которые иначе пришлось бы искать в FAQ: срок
                   выдачи, способы оплаты, деление на категории. */}
-              <div className="glass glass-blur glass-sheen rounded-2xl mt-8 sm:mt-10 w-full max-w-2xl grid grid-cols-3 animate-glass-settle" style={{ animationDelay: '0.65s' }}>
+              <div className="glass glass-blur rounded-2xl mt-8 sm:mt-10 w-full max-w-2xl grid grid-cols-3 animate-glass-settle" style={{ animationDelay: '0.65s' }}>
                 {facts.map((fact) => (
                   <div key={fact.value} className="px-2 sm:px-5 py-3 sm:py-4 text-center border-l border-white/[0.05] first:border-l-0">
                     <div className="text-[11px] sm:text-sm font-semibold text-white/80">{fact.value}</div>
@@ -495,8 +499,14 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
                   </aside>
 
                   <div className="flex-1 min-w-0">
+                    {/* key — только по вкладке. Раньше сюда входил ещё счётчик
+                        входов на слайд, и каждое открытие каталога сносило всю
+                        сетку и монтировало восемь плиток заново: восемь новых
+                        <img> и восемь анимаций появления ровно в тот кадр,
+                        когда идёт переход слайда. Смена вкладки перезапускает
+                        появление и без счётчика. */}
                     <PriceGrid
-                      key={`${category}-${catalogSeq}`}
+                      key={category}
                       items={currentItems}
                       filler={category === 'bundles' ? { label: 'Свой вариант', desc: 'Напишите в бот' } : undefined}
                       tabKey={category}
@@ -605,7 +615,7 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
                     <SectionHeading title="Доступные способы" align="left" />
                   </div>
 
-                  <TiltCard className="glass glass-sheen glass-tinted rounded-2xl w-full max-w-xs mt-6 aspect-[1.586/1] p-5 sm:p-6 animate-fade-in overflow-hidden" style={{ animationDelay: '0.1s' }}>
+                  <div className="zoom-card glass glass-tinted rounded-2xl w-full max-w-xs mt-6 aspect-[1.586/1] p-5 sm:p-6 animate-fade-in overflow-hidden" style={{ animationDelay: '0.1s' }}>
                     <div className="relative flex flex-col justify-between h-full">
                       <div className="flex items-center justify-between">
                         <span className="text-[10px] tracking-[0.2em] uppercase text-white/30">Castello</span>
@@ -635,7 +645,7 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
                         </div>
                       </div>
                     </div>
-                  </TiltCard>
+                  </div>
                 </div>
 
                 <div aria-hidden className="hidden lg:block w-px self-stretch bg-gradient-to-b from-transparent via-white/[0.07] to-transparent" />
