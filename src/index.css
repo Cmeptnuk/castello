@@ -30,6 +30,36 @@
   --animate-slide-in-right: slide-in-right 0.25s ease-out;
   --animate-card-enter: card-enter 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
   --breakpoint-xs: 20rem;
+  /* Цвет Discord. Уже стоял на кнопке приглашения — теперь он же красит
+     фоновые пятна, подписи разделов и активную точку навигации. */
+  --color-brand: #5865f2;
+}
+
+:root {
+  /* Позиция курсора, нормированная в -1…1. Пишется из App через ref, минуя
+     React: на движении мыши перерисовывать дерево незачем, читатели у
+     переменной только в CSS. Ноль — значение для сервера и до первого движения. */
+  --mx: 0;
+  --my: 0;
+
+  --glass-bg: rgba(255, 255, 255, 0.045);
+  --glass-bg-strong: rgba(255, 255, 255, 0.07);
+  --glass-blur: blur(24px) saturate(160%);
+  --glass-ring-top: rgba(255, 255, 255, 0.22);
+  --glass-ring-side: rgba(255, 255, 255, 0.07);
+  --glass-ring-bottom: rgba(255, 255, 255, 0.03);
+  --glass-shadow: 0 16px 48px -12px rgba(0, 0, 0, 0.7);
+  --glass-tint: rgba(88, 101, 242, 0.1);
+
+  --chrome-pad: 1.25rem;
+  --chrome-grid: 4rem;
+}
+
+@media (min-width: 40rem) {
+  :root {
+    --chrome-pad: 2rem;
+    --chrome-grid: 6rem;
+  }
 }
 
 @keyframes fade-in {
@@ -87,6 +117,186 @@ html {
   color: white;
 }
 
+:focus-visible {
+  outline: 1px solid rgba(255, 255, 255, 0.5);
+  outline-offset: 2px;
+}
+
+/* ─── Материал ─────────────────────────────────────────────────────────────
+   Стеклом поверхность делает не прозрачность, а три вещи: кант с одним
+   источником света сверху, блик под курсором и цвет, подхваченный из фона.
+   Индиго нигде не назначается поверхностям — оно лежит в пятнах под ними
+   и попадает в стекло через backdrop-filter. */
+
+.glass {
+  position: relative;
+  isolation: isolate;
+  background: var(--glass-bg);
+  box-shadow: var(--glass-shadow);
+}
+
+.glass-strong {
+  background: var(--glass-bg-strong);
+}
+
+/* Кант рисуется градиентом и вырезается маской: обычный border светится
+   одинаково по всему периметру, а у стекла верхняя кромка ловит свет,
+   нижняя почти не видна. */
+.glass::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  border-radius: inherit;
+  background: linear-gradient(
+    180deg,
+    var(--glass-ring-top),
+    var(--glass-ring-side) 30%,
+    var(--glass-ring-bottom)
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Блюр — только на уровне панели. Он дорожает линейно с числом слоёв,
+   поэтому карточки внутри панели своего блюра не получают. */
+.glass-blur {
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+}
+
+/* Пятно света под курсором. Координаты ставит делегированный обработчик
+   в App — по одному элементу за раз, тот, над которым мышь.
+ *
+ * Значения объявлены на самом элементе, а не только как fallback внутри var():
+ * пользовательские свойства наследуются, и без своего объявления карточки
+ * подхватывали --sheen у панели — курсор входил в панель где угодно, хоть на
+ * заголовок, и блик загорался сразу на всех карточках. Инлайновый style,
+ * который ставит обработчик, объявление в классе всё равно перебивает.
+ *
+ * overflow нужен блику: пятно теперь больше самого элемента и обрезается
+ * по его скруглению. */
+.glass-sheen {
+  --sheen: 0;
+  --gx: 0px;
+  --gy: 0px;
+  overflow: hidden;
+}
+
+/* Пятно фиксированного размера, которое ездит трансформом.
+ *
+ * Раньше центр градиента стоял прямо в background: radial-gradient(... at
+ * var(--gx) var(--gy)). Изменение переменной внутри background — это не
+ * композиция, а перерисовка: браузер заново строил градиент по всей площади
+ * элемента на каждом движении мыши. У карточки это 180 пикселей и незаметно,
+ * у панели каталога — 1150×650, и весь слайд перерисовывался кадр за кадром.
+ * Отсюда и лаги ровно на каталоге: это самая большая стеклянная панель сайта.
+ *
+ * Теперь градиент нарисован один раз в центре собственного бокса 32rem, а
+ * курсор двигает бокс. Площадь перерисовки перестала зависеть от размера
+ * панели. */
+.glass-sheen::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  width: 32rem;
+  height: 32rem;
+  margin: -16rem 0 0 -16rem;
+  background: radial-gradient(
+    16rem circle at center,
+    rgba(255, 255, 255, 0.07),
+    transparent 70%
+  );
+  transform: translate(var(--gx, 0px), var(--gy, 0px));
+  opacity: var(--sheen, 0);
+  transition: opacity 0.35s ease-out;
+  pointer-events: none;
+}
+
+/* Слой — только под курсором: тогда пятно двигает композитор и не перерисовывает
+   ничего вовсе. Держать его постоянно значило бы отдать по буферу 32rem каждой
+   карточке сетки разом. */
+.glass-sheen:hover::before {
+  will-change: transform;
+}
+
+.glass-tinted {
+  background:
+    linear-gradient(180deg, var(--glass-tint), transparent 60%),
+    var(--glass-bg);
+}
+
+/* ─── Шасси страницы ───────────────────────────────────────────────────────
+   Постоянный слой по краям экрана: он не меняется между слайдами и живёт
+   вне .slide-viewport, поэтому в переходах не участвует. */
+
+.chrome-grid {
+  background-image:
+    repeating-linear-gradient(
+      to right,
+      rgba(255, 255, 255, 0.02) 0 1px,
+      transparent 1px var(--chrome-grid)
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.02) 0 1px,
+      transparent 1px var(--chrome-grid)
+    );
+  /* Гуще по краям, растворяется к середине — иначе линии лезут под текст. */
+  -webkit-mask-image: radial-gradient(ellipse 62% 55% at 50% 50%, transparent, #000);
+  mask-image: radial-gradient(ellipse 62% 55% at 50% 50%, transparent, #000);
+}
+
+.chrome-corner {
+  position: absolute;
+  width: 0.875rem;
+  height: 0.875rem;
+  border: 0 solid rgba(255, 255, 255, 0.08);
+}
+
+.chrome-corner--tl {
+  top: var(--chrome-pad);
+  left: var(--chrome-pad);
+  border-top-width: 1px;
+  border-left-width: 1px;
+}
+.chrome-corner--tr {
+  top: var(--chrome-pad);
+  right: var(--chrome-pad);
+  border-top-width: 1px;
+  border-right-width: 1px;
+}
+.chrome-corner--bl {
+  bottom: var(--chrome-pad);
+  left: var(--chrome-pad);
+  border-bottom-width: 1px;
+  border-left-width: 1px;
+}
+.chrome-corner--br {
+  bottom: var(--chrome-pad);
+  right: var(--chrome-pad);
+  border-bottom-width: 1px;
+  border-right-width: 1px;
+}
+
+.chrome-vtext {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+
+/* ─── Слайды ───────────────────────────────────────────────────────────── */
+
+.noise {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 200px 200px;
+}
+
 .slide-viewport .slide-section {
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
@@ -103,17 +313,46 @@ html {
   visibility: visible;
 }
 
-/* На тач-устройствах убираем самые дорогие для отрисовки эффекты.
-   Декоративные пятна идут с прозрачностью 0.8–1.5%, на глаз их почти нет,
-   а блюр 100–150px заставляет мобильный GPU рисовать огромные буферы.
-   backdrop-filter на карточках каталога дорожает линейно с их количеством. */
+/* Стекло первого экрана въезжает сдвигом и радиусом блюра, а не
+   прозрачностью: см. комментарий к rise-in. */
+@keyframes glass-settle {
+  from {
+    transform: translateY(10px);
+    -webkit-backdrop-filter: blur(0) saturate(100%);
+    backdrop-filter: blur(0) saturate(100%);
+  }
+  to {
+    transform: translateY(0);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+  }
+}
+
+.animate-glass-settle {
+  animation: glass-settle 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* На тач-устройствах блюр остаётся только у панелей и с меньшим радиусом:
+   карточки его и так не получают, а декоративные пятна идут с прозрачностью
+   ~1% — блюр 100–150px заставлял бы мобильный GPU рисовать огромные буферы
+   ради почти невидимого пятна. Их роль забирает сетка, она рисуется
+   градиентами и стоит заметно дешевле. */
 @media (hover: none) {
+  :root {
+    --glass-blur: blur(16px) saturate(140%);
+  }
+
   .decor-orbs {
     display: none;
   }
+}
 
-  [class*='backdrop-blur'] {
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
