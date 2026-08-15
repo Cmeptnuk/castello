@@ -1,4 +1,4 @@
-import { Fragment, useState, useEffect, useRef, useSyncExternalStore } from 'react'
+import { Fragment, useState, useEffect, useRef, useSyncExternalStore, useCallback, type CSSProperties } from 'react'
 import { ShoppingCart, Menu, UserRound, X } from 'lucide-react'
 import { SpeedInsights } from '@vercel/speed-insights/react'
 import { Analytics } from '@vercel/analytics/react'
@@ -69,7 +69,17 @@ const motionDuration = (ms: number) => (
 )
 /* Поля слайда держат содержимое в стороне от шасси: сверху — панель навигации,
    снизу — пагинация, по бокам — вертикальные подписи и углы. */
-const SLIDE_BOX = 'h-full overflow-y-auto px-10 sm:px-16 lg:px-24 pt-14 sm:pt-20 pb-16 sm:pb-20 flex flex-col items-center justify-center'
+const SLIDE_BOX = 'h-full overflow-y-auto px-8 sm:px-16 lg:px-24 pt-20 pb-20 flex flex-col items-center justify-start lg:justify-center'
+
+type CartFlight = {
+  id: number
+  x: number
+  y: number
+  midX: number
+  midY: number
+  dx: number
+  dy: number
+}
 
 function App({ initialSlide = 0 }: { initialSlide?: number }) {
   // Стартовый слайд виден с первого кадра, а не после монтирования: иначе весь
@@ -88,6 +98,10 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [profileOpen, setProfileOpen] = useState(false)
   const [detail, setDetail] = useState<PriceItem | null>(null)
+  const closeProduct = useCallback(() => setDetail(null), [])
+  const [cartPulse, setCartPulse] = useState(0)
+  const [cartFlight, setCartFlight] = useState<CartFlight | null>(null)
+  const [removingCartIndex, setRemovingCartIndex] = useState<number | null>(null)
   /* Стрелки листают слайды из обработчика, повешенного один раз на window, —
      открытые поверх сайта инструменты поэтому отражаются в ref отдельно. */
   const overlayRef = useRef(false)
@@ -98,6 +112,9 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
   const cartTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
   const menuTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const removeTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const flightTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const cartButtonRef = useRef<HTMLDivElement>(null)
   const rootRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -111,13 +128,36 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
     return () => controller.abort()
   }, [])
 
-  const onAdd = (item: PriceItem) => {
-    writeCart([...cart, item])
+  const onAdd = (item: PriceItem, source?: HTMLElement) => {
+    writeCart([...readCart(), item])
+    setCartPulse((pulse) => pulse + 1)
+    const origin = source?.getBoundingClientRect()
+    const target = cartButtonRef.current?.getBoundingClientRect()
+    if (origin && target) {
+      const x = origin.left + origin.width / 2 - 10
+      const y = origin.top + origin.height / 2 - 10
+      const targetX = target.left + target.width / 2 - 10
+      const targetY = target.top + target.height / 2 - 10
+      const dx = targetX - x
+      const dy = targetY - y
+      setCartFlight({ id: Date.now(), x, y, dx, dy, midX: dx * 0.42, midY: dy * 0.42 - 42 })
+      clearTimeout(flightTimer.current)
+      flightTimer.current = setTimeout(() => setCartFlight(null), motionDuration(820))
+    }
     setToast('Товар добавлен в корзину')
     clearTimeout(toastTimer.current)
     toastTimer.current = setTimeout(() => setToast(''), 2000)
   }
-  const removeFromCart = (index: number) => writeCart(cart.filter((_, i) => i !== index))
+  const removeFromCart = (index: number) => {
+    if (removingCartIndex !== null) return
+    setRemovingCartIndex(index)
+    clearTimeout(removeTimer.current)
+    removeTimer.current = setTimeout(() => {
+      const current = readCart()
+      if (current[index]) writeCart(current.filter((_, i) => i !== index))
+      setRemovingCartIndex(null)
+    }, motionDuration(480))
+  }
 
   const openCart = () => {
     clearTimeout(cartTimer.current)
@@ -157,6 +197,8 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
     clearTimeout(toastTimer.current)
     clearTimeout(cartTimer.current)
     clearTimeout(menuTimer.current)
+    clearTimeout(removeTimer.current)
+    clearTimeout(flightTimer.current)
   }, [])
 
   const slideRef = useRef(initialSlide)
@@ -330,6 +372,24 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
       <Analytics {...observability.analytics} />
       <CursorTrail />
 
+      {cartFlight && (
+        <span
+          key={cartFlight.id}
+          aria-hidden
+          className="cart-flight fixed z-[80] pointer-events-none"
+          style={{
+            left: cartFlight.x,
+            top: cartFlight.y,
+            '--flight-mid-x': `${cartFlight.midX}px`,
+            '--flight-mid-y': `${cartFlight.midY}px`,
+            '--flight-dx': `${cartFlight.dx}px`,
+            '--flight-dy': `${cartFlight.dy}px`,
+          } as CSSProperties}
+        >
+          <ShoppingCart className="w-5 h-5" />
+        </span>
+      )}
+
       <div aria-hidden className="noise fixed inset-0 pointer-events-none -z-0 opacity-[0.03]" />
 
       {/* Индиго живёт здесь и больше нигде: панели забирают его через
@@ -346,7 +406,7 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
 
       <PageChrome slide={slide} onSelect={goToSlide} />
 
-      <nav className="chrome-enter fixed top-(--chrome-pad) left-0 right-0 z-40 flex items-center justify-between gap-2 px-11 sm:px-16">
+      <nav className="chrome-enter fixed top-(--chrome-pad) left-0 right-0 z-40 flex items-center justify-between gap-2 px-5 sm:px-16">
         <button
           onClick={() => menuOpen ? closeMenu() : openMenu()}
           className="glass glass-blur rounded-xl w-9 h-9 flex items-center justify-center sm:hidden transition-[background-color] hover:bg-white/[0.09]"
@@ -400,14 +460,15 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
               <span aria-hidden className="profile-status absolute right-0.5 bottom-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400 ring-2 ring-[#111114]" />
             )}
           </div>
-          <div className="relative">
+          <div ref={cartButtonRef} className="relative cart-target">
             <button onClick={openCart}
-              className="rounded-xl w-8 h-8 flex items-center justify-center transition-colors hover:bg-white/[0.08]"
+              className={`rounded-xl w-8 h-8 flex items-center justify-center transition-colors hover:bg-white/[0.08] ${cartPulse ? 'cart-icon-receive' : ''}`}
               aria-label={`Корзина, товаров: ${cart.length}`}>
-              <ShoppingCart className="w-4.5 h-4.5 text-white/60" />
+              <ShoppingCart key={`cart-icon-${cartPulse}`} className="w-4.5 h-4.5 text-white/60" />
             </button>
+            {cartPulse > 0 && <span key={`cart-pulse-${cartPulse}`} aria-hidden className="cart-receive-ring absolute inset-0 rounded-xl pointer-events-none" />}
             {cart.length > 0 && (
-              <span key={cart.length} className="cart-count absolute -top-0.5 -right-0.5 w-4 h-4 rounded-[3px] bg-white text-[#070708] text-[9px] font-bold flex items-center justify-center pointer-events-none">
+              <span key={`cart-count-${cart.length}`} className="cart-count absolute -top-0.5 -right-0.5 w-4 h-4 rounded-[3px] bg-white text-[#070708] text-[9px] font-bold flex items-center justify-center pointer-events-none">
                 {cart.length}
               </span>
             )}
@@ -435,14 +496,14 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
               </div>
             ) : (
               <>
-                <div className="flex-1 overflow-y-auto px-5 py-4 space-y-2">
+                <div className="cart-list flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-2">
                   {cart.map((item, i) => (
-                    <div key={`${item.label}-${item.priceRUB}-${i}`} className="cart-item glass rounded-xl flex items-center justify-between px-4 py-3" style={{ animationDelay: `${0.08 + i * 0.055}s` }}>
+                    <div key={`${item.label}-${item.priceRUB}-${i}`} className={`cart-item glass rounded-xl flex items-center justify-between px-4 py-3 ${removingCartIndex === i ? 'is-removing' : ''}`} style={{ animationDelay: removingCartIndex === i ? '0s' : `${0.08 + i * 0.055}s` }}>
                       <div>
                         <div className="text-sm font-medium text-white/80">{item.label}</div>
                         <div className="text-xs text-white/40">{item.priceRUB} ₽</div>
                       </div>
-                      <button onClick={() => removeFromCart(i)} className="w-7 h-7 rounded-lg bg-white/[0.06] flex items-center justify-center hover:bg-white/15 transition-colors shrink-0 ml-3" aria-label={`Убрать ${item.label} за ${item.priceRUB} ₽`}>
+                      <button onClick={() => removeFromCart(i)} disabled={removingCartIndex !== null} className="cart-remove-button w-7 h-7 rounded-lg bg-white/[0.06] flex items-center justify-center hover:bg-white/15 transition-colors shrink-0 ml-3 disabled:pointer-events-none" aria-label={`Убрать ${item.label} за ${item.priceRUB} ₽`}>
                         <X className="w-3.5 h-3.5 text-white/50" />
                       </button>
                     </div>
@@ -471,9 +532,8 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
         <ProductDialog
           item={detail}
           copy={catalogCopy[category][nitroFilter]}
-          telegramUrl={TELEGRAM_URL}
           onAdd={onAdd}
-          onClose={() => setDetail(null)}
+          onClose={closeProduct}
         />
       )}
 

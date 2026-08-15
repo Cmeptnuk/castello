@@ -70,7 +70,7 @@ const sortedCardImages = (folder: 'Decorations' | 'Packs', prefix: 'Decorations'
   Array.from({ length: count }, (_, index) => `/ItemsCards/${folder}/${prefix}${index + 1}.png`)
     .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }))
 
-const decorationsArt = sortedCardImages('Decorations', 'Decorations', 7)
+const decorationsArt = sortedCardImages('Decorations', 'Decorations', 8)
 const packsArt = sortedCardImages('Packs', 'Packs', 7)
 
 const withCardArt = (items: PriceItem[], images: string[]): PriceItem[] =>

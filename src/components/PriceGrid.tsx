@@ -3,13 +3,13 @@ import { ShoppingCart, Plus, Check } from 'lucide-react'
 import { DiscordIcon } from './icons.tsx'
 import type { PriceItem } from '../data.ts'
 
-export function PriceGrid({ items, filler, tabKey, onAdd, onOpen }: { items: PriceItem[]; filler?: { label: string; desc: string }; tabKey: string; onAdd?: (item: PriceItem) => void; onOpen?: (item: PriceItem) => void }) {
+export function PriceGrid({ items, filler, tabKey, onAdd, onOpen }: { items: PriceItem[]; filler?: { label: string; desc: string }; tabKey: string; onAdd?: (item: PriceItem, source?: HTMLElement) => void; onOpen?: (item: PriceItem) => void }) {
   const [added, setAdded] = useState<Set<number>>(new Set())
   const timers = useRef<(ReturnType<typeof setTimeout> | undefined)[]>([])
   const hasArt = items.some((item) => item.art)
 
-  const handleAdd = (i: number, item: PriceItem) => {
-    onAdd?.(item)
+  const handleAdd = (i: number, item: PriceItem, source: HTMLElement) => {
+    onAdd?.(item, source)
     setAdded(prev => new Set(prev).add(i))
     clearTimeout(timers.current[i])
     timers.current[i] = setTimeout(() => {
@@ -42,8 +42,8 @@ export function PriceGrid({ items, filler, tabKey, onAdd, onOpen }: { items: Pri
                 onOpen?.(item)
               }
             }}
-            className="zoom-card glass glass-tinted rounded-2xl p-2 sm:p-2.5 flex flex-col gap-2 sm:gap-2.5 animate-fade-in group cursor-pointer hover:bg-white/[0.07]"
-            style={{ animationDelay: `${0.05 + i * 0.08}s` }}
+            className={`zoom-card glass glass-tinted rounded-2xl p-2 sm:p-2.5 flex flex-col gap-2 sm:gap-2.5 animate-fade-in group cursor-pointer hover:bg-white/[0.07] ${justAdded ? 'is-added' : ''}`}
+            style={{ animationDelay: justAdded ? '0s' : `${0.05 + i * 0.08}s` }}
           >
             {/* Арты имеют формат около 16:9. Показываем кадр целиком, чтобы
                 встроенные в изображение заголовки не обрезались по бокам. */}
@@ -95,7 +95,7 @@ export function PriceGrid({ items, filler, tabKey, onAdd, onOpen }: { items: Pri
                 <div className="text-[10px] sm:text-[11px] text-white/30 tabular-nums">{item.priceRUB} ₽</div>
               </div>
               <button
-                onClick={(e) => { e.stopPropagation(); handleAdd(i, item) }}
+                onClick={(e) => { e.stopPropagation(); handleAdd(i, item, e.currentTarget) }}
                 className="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg relative bg-white/[0.05] transition-all duration-200 group/add hover:bg-white/[0.1]"
                 aria-label={justAdded ? 'Добавлено в корзину' : `Добавить в корзину за ${item.priceRUB} ₽`}
                 style={justAdded ? { backgroundColor: 'rgba(52,211,153,0.15)' } : undefined}

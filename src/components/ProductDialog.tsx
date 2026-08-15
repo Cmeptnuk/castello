@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type MouseEvent } from 'react'
 import { X, Check, ShoppingCart } from 'lucide-react'
-import { DiscordIcon, TelegramIcon, ShieldCheckIcon } from './icons.tsx'
+import { DiscordIcon, ShieldCheckIcon } from './icons.tsx'
 import type { CatalogCopy, PriceItem } from '../data.ts'
 
 const TITLE_ID = 'product-dialog-title'
@@ -13,11 +13,10 @@ const motionDuration = (ms: number) => (
 /** Окно товара. Главное, что оно должно сказать: строка прайса — это ценовая
  *  категория, а арт лишь показывает, что за эти деньги бывает. Поэтому оговорка
  *  стоит выше описания и состава, а не сноской под ними. */
-export function ProductDialog({ item, copy, telegramUrl, onAdd, onClose }: {
+export function ProductDialog({ item, copy, onAdd, onClose }: {
   item: PriceItem
   copy: CatalogCopy
-  telegramUrl: string
-  onAdd: (item: PriceItem) => void
+  onAdd: (item: PriceItem, source?: HTMLElement) => void
   onClose: () => void
 }) {
   const closeRef = useRef<HTMLButtonElement>(null)
@@ -49,16 +48,21 @@ export function ProductDialog({ item, copy, telegramUrl, onAdd, onClose }: {
     }
   }, [onClose])
 
-  const handleAdd = () => {
-    onAdd(item)
+  const handleAdd = (event: MouseEvent<HTMLButtonElement>) => {
+    if (added || closing) return
+    onAdd(item, event.currentTarget)
     setAdded(true)
     clearTimeout(timer.current)
-    timer.current = setTimeout(() => setAdded(false), 1600)
+    timer.current = setTimeout(() => {
+      setClosing(true)
+      clearTimeout(closeTimer.current)
+      closeTimer.current = setTimeout(onClose, motionDuration(520))
+    }, motionDuration(260))
   }
 
   return (
     <div
-      className={`product-overlay fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6 ${closing ? 'is-exiting' : ''}`}
+      className={`product-overlay fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6 ${closing ? 'is-exiting' : ''} ${added ? 'is-added' : ''}`}
       role="dialog"
       aria-modal="true"
       aria-labelledby={TITLE_ID}
@@ -93,7 +97,7 @@ export function ProductDialog({ item, copy, telegramUrl, onAdd, onClose }: {
           </div>
         )}
 
-        <div className="product-dialog-body flex-1 overflow-y-auto p-5 sm:p-6 flex flex-col gap-5">
+        <div className="product-dialog-body min-h-0 flex-1 overflow-y-auto p-5 sm:p-6 flex flex-col gap-5">
           <div className="flex items-start justify-between gap-4 pr-8">
             <div className="min-w-0">
               <span className="text-[10px] tracking-[0.25em] uppercase text-white/30">Ценовая категория</span>
@@ -137,24 +141,17 @@ export function ProductDialog({ item, copy, telegramUrl, onAdd, onClose }: {
             <span className="text-xs sm:text-sm text-white/50 leading-relaxed">{copy.account}</span>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-2">
-            <button
-              onClick={handleAdd}
-              className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-white text-[#070708] font-semibold text-sm hover:bg-gray-100 transition-colors"
-            >
-              {added ? <Check className="w-4 h-4" /> : <ShoppingCart className="w-4 h-4" />}
-              {added ? 'Добавлено' : 'Добавить в корзину'}
-            </button>
-            <a
-              href={telegramUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-white/[0.05] text-white/70 font-medium text-sm hover:bg-white/[0.1] hover:text-white/90 transition-colors"
-            >
-              <TelegramIcon className="w-4 h-4" />
-              Выбрать в боте
-            </a>
-          </div>
+        </div>
+
+        <div className="product-dialog-footer shrink-0 border-t border-white/[0.06] bg-black/15 px-5 py-4 sm:px-6">
+          <button
+            onClick={handleAdd}
+            disabled={added || closing}
+            className={`product-add-button w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-white text-[#070708] font-semibold text-sm hover:bg-gray-100 transition-colors disabled:cursor-default ${added ? 'is-added' : ''}`}
+          >
+            {added ? <Check className="w-4 h-4" /> : <ShoppingCart className="w-4 h-4" />}
+            {added ? 'Добавлено' : 'Добавить в корзину'}
+          </button>
         </div>
       </div>
     </div>

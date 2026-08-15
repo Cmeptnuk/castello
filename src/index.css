@@ -171,6 +171,62 @@
   100% { opacity: 0; transform: translate3d(-50%, -8px, 0) scale(0.98) }
 }
 
+@keyframes catalog-card-added {
+  0% { transform: scale(1); box-shadow: var(--glass-shadow) }
+  28% { transform: scale(0.975); box-shadow: 0 10px 32px -12px rgba(0, 0, 0, 0.7) }
+  66% { transform: scale(1.025); box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.32), 0 14px 40px -14px rgba(52, 211, 153, 0.45) }
+  100% { transform: scale(1); box-shadow: var(--glass-shadow) }
+}
+
+@keyframes add-button-confirm {
+  0% { transform: scale(0.78) rotate(-8deg) }
+  62% { transform: scale(1.15) rotate(3deg) }
+  100% { transform: scale(1) rotate(0) }
+}
+
+@keyframes cart-flight {
+  0% { opacity: 0; transform: translate3d(0, 0, 0) scale(0.55) rotate(-14deg) }
+  12% { opacity: 1; transform: translate3d(0, 0, 0) scale(1) rotate(-6deg) }
+  58% { opacity: 1; transform: translate3d(var(--flight-mid-x), var(--flight-mid-y), 0) scale(0.9) rotate(10deg) }
+  88% { opacity: 1; transform: translate3d(var(--flight-dx), var(--flight-dy), 0) scale(0.52) rotate(0) }
+  100% { opacity: 0; transform: translate3d(var(--flight-dx), var(--flight-dy), 0) scale(0.18) rotate(0) }
+}
+
+@keyframes cart-icon-receive {
+  0% { transform: scale(1) rotate(0) }
+  38% { transform: scale(0.82) rotate(-8deg) }
+  72% { transform: scale(1.22) rotate(5deg) }
+  100% { transform: scale(1) rotate(0) }
+}
+
+@keyframes cart-receive-ring {
+  0%, 42% { opacity: 0; transform: scale(0.7) }
+  58% { opacity: 0.75; transform: scale(0.9) }
+  100% { opacity: 0; transform: scale(1.65) }
+}
+
+@keyframes product-button-success {
+  0% { transform: scale(1) }
+  45% { transform: scale(0.97) }
+  100% { transform: scale(1) }
+}
+
+@keyframes product-added-exit {
+  0% { opacity: 1; transform: translate3d(0, 0, 0) scale(1) }
+  100% { opacity: 0; transform: translate3d(22px, -18px, 0) scale(0.955) }
+}
+
+@keyframes cart-item-remove {
+  0% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); max-height: 5rem }
+  62% { opacity: 0; transform: translate3d(36px, 0, 0) scale(0.96); max-height: 5rem; padding-top: 0.75rem; padding-bottom: 0.75rem; margin-bottom: 0 }
+  100% { opacity: 0; transform: translate3d(48px, -4px, 0) scale(0.94); max-height: 0; padding-top: 0; padding-bottom: 0; margin-bottom: -0.5rem }
+}
+
+@keyframes remove-icon-exit {
+  from { transform: scale(1) rotate(0) }
+  to { transform: scale(0.45) rotate(90deg) }
+}
+
 @keyframes chrome-enter {
   from { opacity: 0; transform: translate3d(0, -10px, 0) }
   to { opacity: 1; transform: translate3d(0, 0, 0) }
@@ -506,6 +562,58 @@ html {
 .cart-empty { animation-delay: 0.1s }
 .cart-footer { animation-delay: 0.16s }
 
+.zoom-card.is-added {
+  z-index: 10;
+  animation: catalog-card-added 0.72s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.zoom-card.is-added .group\/add {
+  animation: add-button-confirm 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.cart-flight {
+  width: 1.25rem;
+  height: 1.25rem;
+  display: grid;
+  place-items: center;
+  color: #070708;
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.35);
+  animation: cart-flight 0.8s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.cart-icon-receive > svg {
+  transform-origin: center;
+  animation: cart-icon-receive 0.7s 0.34s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.cart-receive-ring {
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  animation: cart-receive-ring 0.72s 0.3s ease-out both;
+}
+
+.product-add-button.is-added {
+  background: #eafff7;
+  color: #075f46;
+  animation: product-button-success 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.product-overlay.is-exiting.is-added .product-dialog {
+  transform-origin: 82% 10%;
+  animation: product-added-exit 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.cart-item.is-removing {
+  overflow: hidden;
+  pointer-events: none;
+  animation: cart-item-remove 0.48s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.cart-item.is-removing .cart-remove-button svg {
+  animation: remove-icon-exit 0.3s ease-in both;
+}
+
 .product-dialog,
 .auth-dialog {
   animation: dialog-enter 0.72s cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -546,6 +654,10 @@ html {
 .product-dialog-body > :nth-child(4) { animation-delay: 0.23s }
 .product-dialog-body > :nth-child(5) { animation-delay: 0.28s }
 .product-dialog-body > :nth-child(6) { animation-delay: 0.33s }
+
+.product-dialog-footer {
+  animation: item-enter 0.64s 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
 
 .auth-dialog-body > * {
   animation: item-enter 0.64s cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -932,6 +1044,24 @@ html {
 }
 
 @media (max-width: 30rem) {
+  .product-dialog {
+    max-height: calc(100svh - 2rem);
+  }
+
+  .product-dialog-body {
+    gap: 1rem;
+    padding: 1rem;
+    background: rgba(9, 9, 11, 0.9);
+  }
+
+  .product-dialog-footer {
+    padding: 0.75rem 1rem 1rem;
+  }
+
+  .cart-drawer {
+    background: rgba(9, 9, 11, 0.96);
+  }
+
   .profile-stats > div {
     padding-inline: 0.35rem;
   }
@@ -1098,6 +1228,9 @@ html {
   .auth-form-swap,
   .auth-title-swap,
   .profile-avatar,
+  .zoom-card.is-added,
+  .product-add-button.is-added,
+  .cart-icon-receive > svg,
   .reveal-block,
   .animate-fade-in,
   .animate-rise-in,
@@ -1119,6 +1252,7 @@ html {
 
   .slide-exit-forward,
   .slide-exit-backward,
+  .cart-item.is-removing,
   .overlay-shell.is-exiting .cart-drawer,
   .product-overlay.is-exiting .product-dialog,
   .auth-overlay.is-exiting .auth-dialog,
@@ -1129,5 +1263,10 @@ html {
   .toast-motion {
     animation: none !important;
     opacity: 1;
+  }
+
+  .cart-flight,
+  .cart-receive-ring {
+    display: none;
   }
 }

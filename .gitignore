@@ -14,9 +14,25 @@ backend
 null
 dist-ssr
 *.local
+*.tsbuildinfo
+.eslintcache
+.stylelintcache
+.cache/
+.vite/
+.vite-temp/
+.parcel-cache/
+.turbo/
+.vercel/
+.netlify/
+coverage/
+test-results/
+playwright-report/
+storybook-static/
 
 # Environment
 .env
+.env.*
+!.env.example
 
 # Editor directories and files
 .vscode/*
@@ -28,3 +44,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local agent and OS metadata
+.claude/
+.agents/
+.codex/
+.history/
