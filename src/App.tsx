@@ -49,14 +49,16 @@ const homeOffers = [
     label: 'Украшения',
     desc: 'Рамки, баннеры и цвета ника',
     price: Math.min(...decorationsNoNitro.map((item) => item.priceRUB), ...decorationsWithNitro.map((item) => item.priceRUB)),
-    art: decorationsWithNitro[0]?.thumb ?? decorationsWithNitro[0]?.art,
+    art: '/ItemsCards/Home/Decorations/Decorations1-192.webp',
+    artSet: '/ItemsCards/Home/Decorations/Decorations1-96.webp 96w, /ItemsCards/Home/Decorations/Decorations1-160.webp 160w, /ItemsCards/Home/Decorations/Decorations1-192.webp 192w',
   },
   {
     key: 'bundles' as const,
     label: 'Наборы',
     desc: 'Несколько элементов в одном стиле',
     price: Math.min(...bundlesNoNitro.map((item) => item.priceRUB), ...bundlesWithNitro.map((item) => item.priceRUB)),
-    art: bundlesWithNitro[0]?.thumb ?? bundlesWithNitro[0]?.art,
+    art: '/ItemsCards/Home/Packs/Packs1-192.webp',
+    artSet: '/ItemsCards/Home/Packs/Packs1-96.webp 96w, /ItemsCards/Home/Packs/Packs1-160.webp 160w, /ItemsCards/Home/Packs/Packs1-192.webp 192w',
   },
 ]
 
@@ -144,6 +146,8 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
   const removeTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
   const flightTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
   const cartButtonRef = useRef<HTMLDivElement>(null)
+  const profileLoadedRef = useRef(false)
+  const profileRequestRef = useRef<AbortController | null>(null)
   const cartListRef = useRef<HTMLDivElement>(null)
   const cartPositionsRef = useRef(new Map<string, number>())
   const cartMoveFrame = useRef<number | null>(null)
@@ -192,16 +196,23 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
     }
   }, [cart, cartOpen])
 
-  useEffect(() => {
+  const loadProfile = useCallback(() => {
+    if (profileLoadedRef.current) return
+    profileLoadedRef.current = true
     const controller = new AbortController()
+    profileRequestRef.current = controller
     readProfile(controller.signal)
       .then(setProfile)
       .catch((error) => {
         if (error instanceof DOMException && error.name === 'AbortError') return
         setProfile(null)
       })
-    return () => controller.abort()
+      .finally(() => {
+        if (profileRequestRef.current === controller) profileRequestRef.current = null
+      })
   }, [])
+
+  useEffect(() => () => profileRequestRef.current?.abort(), [])
 
   const onAdd = (item: PriceItem, source?: HTMLElement) => {
     writeCart([...readCart(), item])
@@ -547,7 +558,9 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
           </a>
           <div className="relative">
             <button
-              onClick={() => setProfileOpen(true)}
+              onClick={() => { loadProfile(); setProfileOpen(true) }}
+              onPointerEnter={loadProfile}
+              onFocus={loadProfile}
               className="rounded-xl w-8 h-8 flex items-center justify-center transition-colors hover:bg-white/[0.08]"
               aria-label={profile ? `Профиль: ${profile.displayName}` : 'Войти или зарегистрироваться'}
               aria-haspopup="dialog"
@@ -707,7 +720,18 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
                     className="home-offer-card group glass glass-tinted rounded-2xl p-2.5 flex items-center gap-3 text-left"
                   >
                     <span className="relative w-20 sm:w-24 aspect-video shrink-0 overflow-hidden rounded-xl bg-black/40 ring-1 ring-inset ring-white/[0.08]">
-                      {offer.art && <img src={offer.art} alt="" decoding="async" className="w-full h-full object-cover" />}
+                      {offer.art && (
+                        <img
+                          src={offer.art}
+                          srcSet={offer.artSet}
+                          sizes="(min-width: 640px) 96px, 80px"
+                          width={192}
+                          height={108}
+                          alt=""
+                          decoding="async"
+                          className="w-full h-full object-cover"
+                        />
+                      )}
                       <span aria-hidden className="absolute inset-0 bg-gradient-to-r from-transparent to-black/20" />
                     </span>
                     <span className="min-w-0 flex-1">
