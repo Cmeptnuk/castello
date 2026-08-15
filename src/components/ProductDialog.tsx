@@ -4,6 +4,11 @@ import { DiscordIcon, TelegramIcon, ShieldCheckIcon } from './icons.tsx'
 import type { CatalogCopy, PriceItem } from '../data.ts'
 
 const TITLE_ID = 'product-dialog-title'
+const motionDuration = (ms: number) => (
+  typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    ? Math.min(ms, 480)
+    : ms
+)
 
 /** Окно товара. Главное, что оно должно сказать: строка прайса — это ценовая
  *  категория, а арт лишь показывает, что за эти деньги бывает. Поэтому оговорка
@@ -17,16 +22,30 @@ export function ProductDialog({ item, copy, telegramUrl, onAdd, onClose }: {
 }) {
   const closeRef = useRef<HTMLButtonElement>(null)
   const [added, setAdded] = useState(false)
+  const [closing, setClosing] = useState(false)
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const closeTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
+
+  const requestClose = () => {
+    setClosing(true)
+    clearTimeout(closeTimer.current)
+    closeTimer.current = setTimeout(onClose, motionDuration(520))
+  }
 
   useEffect(() => {
     // Фокус уходит в окно, иначе с клавиатуры остаёшься на карточке под ним.
     closeRef.current?.focus()
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return
+      setClosing(true)
+      clearTimeout(closeTimer.current)
+      closeTimer.current = setTimeout(onClose, motionDuration(520))
+    }
     window.addEventListener('keydown', onKey)
     return () => {
       window.removeEventListener('keydown', onKey)
       clearTimeout(timer.current)
+      clearTimeout(closeTimer.current)
     }
   }, [onClose])
 
@@ -39,18 +58,18 @@ export function ProductDialog({ item, copy, telegramUrl, onAdd, onClose }: {
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6"
+      className={`product-overlay fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6 ${closing ? 'is-exiting' : ''}`}
       role="dialog"
       aria-modal="true"
       aria-labelledby={TITLE_ID}
     >
-      <div className="absolute inset-0 bg-black/70 animate-fade-in" onClick={onClose} />
+      <div className="overlay-backdrop absolute inset-0 bg-black/70" onClick={requestClose} />
       <div
-        className="glass glass-blur relative w-full max-w-xl max-h-[86svh] rounded-3xl overflow-hidden flex flex-col animate-card-enter"
+        className="product-dialog glass glass-blur relative w-full max-w-xl max-h-[86svh] rounded-3xl overflow-hidden flex flex-col"
       >
         <button
           ref={closeRef}
-          onClick={onClose}
+          onClick={requestClose}
           className="absolute top-3 right-3 z-10 w-8 h-8 rounded-lg bg-black/45 flex items-center justify-center hover:bg-black/70 transition-colors"
           aria-label="Закрыть окно товара"
         >
@@ -74,7 +93,7 @@ export function ProductDialog({ item, copy, telegramUrl, onAdd, onClose }: {
           </div>
         )}
 
-        <div className="flex-1 overflow-y-auto p-5 sm:p-6 flex flex-col gap-5">
+        <div className="product-dialog-body flex-1 overflow-y-auto p-5 sm:p-6 flex flex-col gap-5">
           <div className="flex items-start justify-between gap-4 pr-8">
             <div className="min-w-0">
               <span className="text-[10px] tracking-[0.25em] uppercase text-white/30">Ценовая категория</span>

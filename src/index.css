@@ -25,8 +25,8 @@
 
 @theme {
   --font-sans: 'Inter Variable', Inter, system-ui, sans-serif;
-  --animate-fade-in: fade-in 0.5s ease-out both;
-  --animate-rise-in: rise-in 0.5s ease-out both;
+  --animate-fade-in: fade-in 0.7s ease-out both;
+  --animate-rise-in: rise-in 0.75s ease-out both;
   --animate-slide-in-right: slide-in-right 0.25s ease-out;
   --animate-card-enter: card-enter 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
   --breakpoint-xs: 20rem;
@@ -67,6 +67,11 @@
   to { opacity: 1 }
 }
 
+@keyframes fade-out {
+  from { opacity: 1 }
+  to { opacity: 0 }
+}
+
 /* Появление без opacity. Элемент, впервые отрисованный прозрачным, навсегда
    исключается из кандидатов на LCP — поэтому первый экран анимируем сдвигом. */
 @keyframes rise-in {
@@ -82,6 +87,126 @@
 @keyframes card-enter {
   from { opacity: 0; transform: translateY(12px) scale(0.97) }
   to { opacity: 1; transform: translateY(0) scale(1) }
+}
+
+@keyframes slide-enter-forward {
+  from { opacity: 0; transform: translate3d(0, 7svh, 0) scale(0.982) }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1) }
+}
+
+@keyframes slide-exit-forward {
+  from { opacity: 1; transform: translate3d(0, 0, 0) scale(1) }
+  to { opacity: 0; transform: translate3d(0, -3.5svh, 0) scale(0.975) }
+}
+
+@keyframes slide-enter-backward {
+  from { opacity: 0; transform: translate3d(0, -7svh, 0) scale(0.982) }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1) }
+}
+
+@keyframes slide-exit-backward {
+  from { opacity: 1; transform: translate3d(0, 0, 0) scale(1) }
+  to { opacity: 0; transform: translate3d(0, 3.5svh, 0) scale(0.975) }
+}
+
+@keyframes reveal-block {
+  from { opacity: 0; transform: translate3d(0, 18px, 0) scale(0.992) }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1) }
+}
+
+@keyframes backdrop-enter {
+  from { opacity: 0 }
+  to { opacity: 1 }
+}
+
+@keyframes backdrop-exit {
+  from { opacity: 1 }
+  to { opacity: 0 }
+}
+
+@keyframes drawer-enter {
+  from { opacity: 0; transform: translate3d(100%, 0, 0) scaleX(0.96) }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scaleX(1) }
+}
+
+@keyframes drawer-exit {
+  from { opacity: 1; transform: translate3d(0, 0, 0) scaleX(1) }
+  to { opacity: 0; transform: translate3d(100%, 0, 0) scaleX(0.97) }
+}
+
+@keyframes item-enter {
+  from { opacity: 0; transform: translate3d(12px, 8px, 0) }
+  to { opacity: 1; transform: translate3d(0, 0, 0) }
+}
+
+@keyframes dialog-enter {
+  from { opacity: 0; transform: translate3d(0, 28px, 0) scale(0.965) }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1) }
+}
+
+@keyframes dialog-exit {
+  from { opacity: 1; transform: translate3d(0, 0, 0) scale(1) }
+  to { opacity: 0; transform: translate3d(0, 18px, 0) scale(0.975) }
+}
+
+@keyframes menu-enter {
+  from { opacity: 0; transform: scale(1.025) }
+  to { opacity: 1; transform: scale(1) }
+}
+
+@keyframes menu-exit {
+  from { opacity: 1; transform: scale(1) }
+  to { opacity: 0; transform: scale(1.02) }
+}
+
+@keyframes count-pop {
+  0% { opacity: 0; transform: scale(0.45) rotate(-12deg) }
+  65% { opacity: 1; transform: scale(1.18) rotate(3deg) }
+  100% { opacity: 1; transform: scale(1) rotate(0) }
+}
+
+@keyframes toast-life {
+  0% { opacity: 0; transform: translate3d(-50%, 12px, 0) scale(0.96) }
+  14%, 82% { opacity: 1; transform: translate3d(-50%, 0, 0) scale(1) }
+  100% { opacity: 0; transform: translate3d(-50%, -8px, 0) scale(0.98) }
+}
+
+@keyframes chrome-enter {
+  from { opacity: 0; transform: translate3d(0, -10px, 0) }
+  to { opacity: 1; transform: translate3d(0, 0, 0) }
+}
+
+@keyframes auth-dialog-enter {
+  from { opacity: 0; transform: translate3d(0, 26px, 0) scale(0.965) rotateX(3deg) }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1) rotateX(0) }
+}
+
+@keyframes auth-scan {
+  0% { opacity: 0; transform: translate3d(-45%, 0, 0) scaleX(0.2) }
+  38% { opacity: 0.9 }
+  100% { opacity: 0; transform: translate3d(45%, 0, 0) scaleX(1) }
+}
+
+@keyframes auth-form-in {
+  from { opacity: 0; transform: translate3d(10px, 8px, 0) }
+  to { opacity: 1; transform: translate3d(0, 0, 0) }
+}
+
+@keyframes auth-error-in {
+  0% { opacity: 0; transform: translate3d(-8px, 0, 0) }
+  60% { opacity: 1; transform: translate3d(2px, 0, 0) }
+  100% { opacity: 1; transform: translate3d(0, 0, 0) }
+}
+
+@keyframes profile-avatar-in {
+  0% { opacity: 0; transform: scale(0.72) rotate(-7deg) }
+  70% { opacity: 1; transform: scale(1.06) rotate(2deg) }
+  100% { opacity: 1; transform: scale(1) rotate(0) }
+}
+
+@keyframes auth-icon-in {
+  from { opacity: 0; transform: scale(0.65) rotate(-12deg) }
+  to { opacity: 1; transform: scale(1) rotate(0) }
 }
 
 html {
@@ -258,6 +383,15 @@ html {
   text-orientation: mixed;
 }
 
+.chrome-enter {
+  animation: chrome-enter 0.85s 0.12s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.chrome-corner,
+.chrome-vtext {
+  animation: fade-in 0.9s 0.18s ease-out both;
+}
+
 /* ─── Слайды ───────────────────────────────────────────────────────────── */
 
 .noise {
@@ -269,9 +403,41 @@ html {
 .slide-viewport .slide-section {
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  will-change: opacity;
   contain: layout style paint;
   opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform-origin: 50% 50%;
+}
+
+.slide-viewport .slide-section.is-active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.slide-viewport .slide-section.slide-enter-forward,
+.slide-viewport .slide-section.slide-enter-backward,
+.slide-viewport .slide-section.slide-exit-forward,
+.slide-viewport .slide-section.slide-exit-backward {
+  visibility: visible;
+  will-change: transform, opacity;
+}
+
+.slide-viewport .slide-section.slide-enter-forward {
+  animation: slide-enter-forward 1.05s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.slide-viewport .slide-section.slide-exit-forward {
+  animation: slide-exit-forward 0.82s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.slide-viewport .slide-section.slide-enter-backward {
+  animation: slide-enter-backward 1.05s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.slide-viewport .slide-section.slide-exit-backward {
+  animation: slide-exit-backward 0.82s cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 
 /* Стартовый слайд виден с первого кадра, а не после монтирования React.
@@ -280,6 +446,598 @@ html {
 .slide-viewport .slide-section.slide-initial {
   opacity: 1;
   visibility: visible;
+}
+
+/* Скрытый слайд сбрасывает внутренние keyframes. Когда класс is-active
+   возвращается, знакомые utility-анимации запускаются заново без remount
+   тяжёлых карточек каталога и повторного декодирования изображений. */
+.slide-section:not(.is-active):not(.slide-initial) :where(.animate-fade-in, .animate-rise-in, .animate-glass-settle),
+.slide-section:not(.is-active):not(.slide-initial) .reveal-block {
+  animation-name: none !important;
+}
+
+.slide-section.is-active .reveal-block,
+.slide-section.slide-initial .reveal-block {
+  animation: reveal-block 0.9s 0.12s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.slide-section.is-active .reveal-block > * {
+  animation: item-enter 0.72s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.slide-section.is-active .reveal-block > :nth-child(1) { animation-delay: 0.18s }
+.slide-section.is-active .reveal-block > :nth-child(2) { animation-delay: 0.28s }
+.slide-section.is-active .reveal-block > :nth-child(3) { animation-delay: 0.38s }
+.slide-section.is-active .reveal-block > :nth-child(4) { animation-delay: 0.48s }
+
+/* ─── Оверлеи и локальные появления ───────────────────────────────────── */
+
+.overlay-backdrop {
+  animation: backdrop-enter 0.45s ease-out both;
+}
+
+.auth-backdrop {
+  background: rgba(0, 0, 0, 0.86);
+}
+
+.overlay-shell.is-exiting .overlay-backdrop,
+.product-overlay.is-exiting .overlay-backdrop,
+.auth-overlay.is-exiting .overlay-backdrop {
+  animation: backdrop-exit 0.42s ease-in both;
+}
+
+.cart-drawer {
+  transform-origin: 100% 50%;
+  animation: drawer-enter 0.72s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.overlay-shell.is-exiting .cart-drawer {
+  animation: drawer-exit 0.56s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.cart-drawer > :first-child,
+.cart-empty,
+.cart-footer,
+.cart-item {
+  animation: item-enter 0.64s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.cart-drawer > :first-child { animation-delay: 0.04s }
+.cart-empty { animation-delay: 0.1s }
+.cart-footer { animation-delay: 0.16s }
+
+.product-dialog,
+.auth-dialog {
+  animation: dialog-enter 0.72s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.auth-dialog {
+  background: rgba(10, 10, 12, 0.94);
+  transform-origin: 50% 20%;
+  animation-name: auth-dialog-enter;
+  animation-duration: 0.82s;
+}
+
+.auth-dialog::before {
+  content: '';
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  left: 12%;
+  width: 76%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(88, 101, 242, 0.85), rgba(255, 255, 255, 0.7), transparent);
+  pointer-events: none;
+  animation: auth-scan 1.15s 0.12s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.product-overlay.is-exiting .product-dialog,
+.auth-overlay.is-exiting .auth-dialog {
+  animation: dialog-exit 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.product-dialog-body > * {
+  animation: item-enter 0.64s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.product-dialog-body > :nth-child(1) { animation-delay: 0.08s }
+.product-dialog-body > :nth-child(2) { animation-delay: 0.13s }
+.product-dialog-body > :nth-child(3) { animation-delay: 0.18s }
+.product-dialog-body > :nth-child(4) { animation-delay: 0.23s }
+.product-dialog-body > :nth-child(5) { animation-delay: 0.28s }
+.product-dialog-body > :nth-child(6) { animation-delay: 0.33s }
+
+.auth-dialog-body > * {
+  animation: item-enter 0.64s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.auth-dialog-body > :nth-child(1) { animation-delay: 0.06s }
+.auth-dialog-body > :nth-child(2) { animation-delay: 0.11s }
+.auth-dialog-body > :nth-child(3) { animation-delay: 0.16s }
+.auth-dialog-body > :nth-child(4) { animation-delay: 0.21s }
+.auth-dialog-body > :nth-child(5) { animation-delay: 0.26s }
+
+.auth-tabs {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.045);
+  overflow: hidden;
+}
+
+.auth-tab-indicator {
+  position: absolute;
+  inset: 0.25rem auto 0.25rem 0.25rem;
+  width: calc(50% - 0.375rem);
+  border-radius: 0.625rem;
+  background: #fff;
+  box-shadow: 0 6px 18px -8px rgba(0, 0, 0, 0.75);
+  transition: transform 0.46s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.auth-tab-indicator.is-register {
+  transform: translateX(calc(100% + 0.25rem));
+}
+
+.auth-tabs button {
+  position: relative;
+  z-index: 1;
+  min-height: 2.5rem;
+  border-radius: 0.625rem;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  transition: color 0.25s ease, background-color 0.25s ease;
+}
+
+.auth-tabs button:hover {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.auth-tabs button.is-active {
+  color: #070708;
+}
+
+.auth-title-swap {
+  animation: auth-form-in 0.58s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.auth-form-swap {
+  animation: auth-form-in 0.64s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.auth-form-frame {
+  min-height: 0;
+  overflow: hidden;
+  transition: height 0.68s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: height;
+}
+
+.auth-form-swap .auth-stagger:nth-child(1) { animation-delay: 0.04s }
+.auth-form-swap .auth-stagger:nth-child(2) { animation-delay: 0.1s }
+.auth-form-swap .auth-stagger:nth-child(3) { animation-delay: 0.16s }
+
+.auth-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.auth-field > span {
+  color: rgba(255, 255, 255, 0.42);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.auth-field input,
+.auth-field textarea {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.75rem;
+  background: rgba(0, 0, 0, 0.22);
+  color: rgba(255, 255, 255, 0.88);
+  font: inherit;
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.25s ease, background-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.auth-field input {
+  min-height: 2.875rem;
+  padding: 0 0.875rem;
+}
+
+.auth-field textarea {
+  min-height: 6rem;
+  padding: 0.75rem 0.875rem;
+  resize: vertical;
+}
+
+.auth-field input:hover,
+.auth-field textarea:hover {
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.auth-field input:focus,
+.auth-field textarea:focus {
+  border-color: rgba(88, 101, 242, 0.65);
+  background: rgba(0, 0, 0, 0.3);
+  box-shadow: 0 0 0 3px rgba(88, 101, 242, 0.1);
+}
+
+.auth-field.is-invalid input,
+.auth-field.is-invalid textarea {
+  border-color: rgba(248, 113, 113, 0.72);
+  background: rgba(127, 29, 29, 0.08);
+}
+
+.auth-field.is-invalid input:focus,
+.auth-field.is-invalid textarea:focus {
+  border-color: rgba(248, 113, 113, 0.88);
+  box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.11);
+}
+
+.auth-field input:-webkit-autofill,
+.auth-field input:-webkit-autofill:hover,
+.auth-field input:-webkit-autofill:focus {
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 0 0 1000px #151519 inset;
+}
+
+.auth-field small {
+  align-self: flex-end;
+  color: rgba(255, 255, 255, 0.22);
+  font-size: 0.625rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.auth-field .auth-password-hint {
+  align-self: flex-start;
+}
+
+.auth-field-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.35rem;
+  margin: 0;
+  color: rgba(254, 202, 202, 0.86);
+  font-size: 0.6875rem;
+  line-height: 1.45;
+  animation: auth-error-in 0.48s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.auth-field-error svg {
+  flex: 0 0 auto;
+  margin-top: 0.08rem;
+  color: rgba(248, 113, 113, 0.85);
+}
+
+.profile-orders {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.profile-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-block: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.profile-stats > div {
+  min-width: 0;
+  padding: 0.8rem 0.65rem;
+  text-align: center;
+}
+
+.profile-stats > div + div {
+  border-left: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.profile-stats strong,
+.profile-stats span {
+  display: block;
+}
+
+.profile-stats strong {
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-stats span {
+  margin-top: 0.2rem;
+  color: rgba(255, 255, 255, 0.28);
+  font-size: 0.625rem;
+}
+
+.profile-orders-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.profile-orders-heading h3 {
+  margin: 0.15rem 0 0;
+  color: rgba(255, 255, 255, 0.84);
+  font-size: 0.9375rem;
+  font-weight: 650;
+}
+
+.profile-orders-state {
+  display: flex;
+  min-height: 3.5rem;
+  align-items: center;
+  gap: 0.65rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.32);
+  font-size: 0.75rem;
+}
+
+.profile-orders-state svg {
+  flex: 0 0 auto;
+}
+
+.profile-orders-state span {
+  min-width: 0;
+  flex: 1;
+}
+
+.profile-orders-state button {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  transition: color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+}
+
+.profile-orders-state button:hover {
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.profile-orders-state button:active {
+  transform: scale(0.94);
+}
+
+.profile-order-list {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.profile-order-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 0.8rem 0;
+  animation: item-enter 0.58s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.profile-order-row:nth-child(2) { animation-delay: 0.06s }
+.profile-order-row:nth-child(3) { animation-delay: 0.12s }
+.profile-order-row:nth-child(4) { animation-delay: 0.18s }
+.profile-order-row:nth-child(5) { animation-delay: 0.24s }
+
+.profile-order-main {
+  min-width: 0;
+}
+
+.profile-order-reference {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 0.6875rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.profile-order-reference time {
+  color: rgba(255, 255, 255, 0.25);
+  font-weight: 450;
+}
+
+.profile-order-main p {
+  overflow: hidden;
+  margin: 0.3rem 0 0;
+  color: rgba(255, 255, 255, 0.34);
+  font-size: 0.6875rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-order-total {
+  display: grid;
+  justify-items: end;
+  gap: 0.25rem;
+}
+
+.profile-order-total strong {
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.profile-order-total small {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: rgba(255, 255, 255, 0.25);
+  font-size: 0.625rem;
+}
+
+.profile-order-status {
+  border-radius: 0.35rem;
+  padding: 0.18rem 0.38rem;
+  color: rgba(255, 255, 255, 0.48);
+  background: rgba(255, 255, 255, 0.055);
+  font-size: 0.5625rem;
+  font-weight: 600;
+}
+
+.profile-order-status.is-paid,
+.profile-order-status.is-completed {
+  color: rgba(167, 243, 208, 0.78);
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.profile-order-status.is-processing {
+  color: rgba(199, 210, 254, 0.8);
+  background: rgba(88, 101, 242, 0.13);
+}
+
+.profile-order-status.is-cancelled,
+.profile-order-status.is-refunded {
+  color: rgba(254, 202, 202, 0.72);
+  background: rgba(248, 113, 113, 0.08);
+}
+
+.profile-edit-heading {
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  padding-top: 1rem;
+}
+
+.profile-edit-heading span {
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.profile-security-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.profile-security-heading span {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.profile-password-submit {
+  width: 100%;
+}
+
+@media (max-width: 30rem) {
+  .profile-stats > div {
+    padding-inline: 0.35rem;
+  }
+
+  .profile-stats strong {
+    font-size: 0.75rem;
+  }
+
+  .profile-order-row {
+    gap: 0.65rem;
+  }
+}
+
+.auth-primary,
+.auth-secondary {
+  display: inline-flex;
+  min-height: 2.875rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 650;
+  transition: opacity 0.2s ease, background-color 0.25s ease, transform 0.2s ease, box-shadow 0.25s ease;
+}
+
+.auth-primary {
+  width: 100%;
+  color: #070708;
+  background: #fff;
+}
+
+.auth-primary:hover:not(:disabled) {
+  background: #ececec;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px -14px rgba(255, 255, 255, 0.55);
+}
+
+.auth-secondary {
+  min-height: 2.5rem;
+  padding: 0 0.875rem;
+  color: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.auth-secondary:hover:not(:disabled) {
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.auth-primary:active:not(:disabled),
+.auth-secondary:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.auth-primary:disabled,
+.auth-secondary:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.auth-error {
+  border-left: 2px solid rgba(248, 113, 113, 0.8);
+  padding: 0.1rem 0 0.1rem 0.75rem;
+  color: rgba(254, 202, 202, 0.82);
+  font-size: 0.75rem;
+  line-height: 1.5;
+  animation: auth-error-in 0.48s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.auth-stagger,
+.profile-status {
+  animation: item-enter 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.profile-avatar {
+  animation: profile-avatar-in 0.72s 0.06s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.auth-icon-swap {
+  animation: auth-icon-in 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.mobile-menu {
+  animation: menu-enter 0.58s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.mobile-menu.is-exiting {
+  animation: menu-exit 0.42s ease-in both;
+}
+
+.mobile-menu-item {
+  animation: item-enter 0.58s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.mobile-menu.is-exiting .mobile-menu-item {
+  animation: backdrop-exit 0.26s ease-in both;
+}
+
+.cart-count {
+  transform-origin: center;
+  animation: count-pop 0.62s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.toast-motion {
+  animation: toast-life 2s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 /* Стекло первого экрана въезжает сдвигом и радиусом блюра, а не
@@ -298,7 +1056,7 @@ html {
 }
 
 .animate-glass-settle {
-  animation: glass-settle 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: glass-settle 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 /* На тач-устройствах блюр остаётся только у панелей и с меньшим радиусом:
@@ -320,8 +1078,56 @@ html {
   *,
   *::before,
   *::after {
-    animation-duration: 0.01ms !important;
+    animation-duration: 0.4s !important;
+    animation-delay: 0s !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    transition-duration: 0.14s !important;
+  }
+
+  .slide-enter-forward,
+  .slide-enter-backward,
+  .cart-drawer,
+  .product-dialog,
+  .auth-dialog,
+  .mobile-menu,
+  .cart-item,
+  .cart-empty,
+  .cart-footer,
+  .mobile-menu-item,
+  .auth-stagger,
+  .auth-form-swap,
+  .auth-title-swap,
+  .profile-avatar,
+  .reveal-block,
+  .animate-fade-in,
+  .animate-rise-in,
+  .animate-glass-settle {
+    animation-name: fade-in !important;
+  }
+
+  .auth-tab-indicator {
+    transition-duration: 0.22s !important;
+  }
+
+  .auth-form-frame {
+    transition-duration: 0.22s !important;
+  }
+
+  .auth-dialog::before {
+    display: none;
+  }
+
+  .slide-exit-forward,
+  .slide-exit-backward,
+  .overlay-shell.is-exiting .cart-drawer,
+  .product-overlay.is-exiting .product-dialog,
+  .auth-overlay.is-exiting .auth-dialog,
+  .mobile-menu.is-exiting {
+    animation-name: fade-out !important;
+  }
+
+  .toast-motion {
+    animation: none !important;
+    opacity: 1;
   }
 }

@@ -1,7 +1,7 @@
 export function SlideFade({ active, delay = 0, children, className }: { active: boolean; delay?: number; children: React.ReactNode; className?: string }) {
   return (
     <div
-      className={`transition-opacity duration-500 ease-out ${active ? 'opacity-100' : 'opacity-0'} ${className || ''}`}
+      className={`slide-content ${active ? 'is-active' : ''} ${className || ''}`}
       style={{ transitionDelay: active ? `${delay}ms` : '0ms' }}
     >
       {children}

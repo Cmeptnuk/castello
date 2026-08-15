@@ -5,9 +5,8 @@ export interface PriceItem {
   /** Путь к арту в public. Нет файла — нет поля: карточка рисует заглушку,
    *  а не битую картинку и не чужой арт из другой категории. */
   art?: string
-  /** Квадратное превью для плитки каталога. Есть всегда, когда есть art:
-   *  оба пути считаются из одной цены. Полный арт остаётся окну товара —
-   *  в сетке он весил бы в семь раз больше, чем нужно. */
+  /** Изображение для плитки каталога. Может совпадать с полным артом, если
+   *  отдельное уменьшенное превью для файла не подготовлено. */
   thumb?: string
 }
 
@@ -63,28 +62,24 @@ export const catalogCopy: Record<CategoryTab, Record<NitroTab, CatalogCopy>> = {
   },
 }
 
-/* Арт нарисован пока только для наборов без Nitro. Файлы лежат в
-   public/ItemsCards/WithOutNitro/Packs и названы ценой в долларах, поэтому
-   путь считается из самого товара: сменилась цена — достаточно переименовать
-   файл. Список цен приходится держать руками: public Vite не сканирует, а
-   ссылаться на несуществующий файл нельзя — карточка показала бы битую
-   картинку вместо заглушки. Положили новый арт — впишите сюда его цену. */
-const PACKS_NO_NITRO_ART = new Set([10.99, 12.99, 15.99, 17.99, 20.99, 23.99, 28.99])
+/* public/ не сканируется браузером во время выполнения, поэтому список
+   строится из имён файлов, которые лежат в репозитории. Сортировка с
+   numeric:true сохраняет ожидаемый порядок Decorations1, Decorations2, ...
+   даже если позже появятся двузначные номера. */
+const sortedCardImages = (folder: 'Decorations' | 'Packs', prefix: 'Decorations' | 'Packs', count: number) =>
+  Array.from({ length: count }, (_, index) => `/ItemsCards/${folder}/${prefix}${index + 1}.png`)
+    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }))
 
-const PACKS_DIR = '/ItemsCards/WithOutNitro/Packs'
+const decorationsArt = sortedCardImages('Decorations', 'Decorations', 7)
+const packsArt = sortedCardImages('Packs', 'Packs', 7)
 
-const withPackArt = (items: PriceItem[]): PriceItem[] =>
-  items.map((item) =>
-    PACKS_NO_NITRO_ART.has(item.priceUSD)
-      ? {
-          ...item,
-          art: `${PACKS_DIR}/${item.priceUSD}.jpg`,
-          thumb: `${PACKS_DIR}/thumb/${item.priceUSD}.jpg`,
-        }
-      : item,
-  )
+const withCardArt = (items: PriceItem[], images: string[]): PriceItem[] =>
+  items.map((item, index) => {
+    const art = images[index]
+    return art ? { ...item, art } : item
+  })
 
-export const decorationsNoNitro: PriceItem[] = [
+export const decorationsNoNitro: PriceItem[] = withCardArt([
   { label: 'Украшение', priceUSD: 5.99, priceRUB: 159.99 },
   { label: 'Украшение', priceUSD: 7.99, priceRUB: 279.99 },
   { label: 'Украшение', priceUSD: 8.99, priceRUB: 379.99 },
@@ -93,9 +88,9 @@ export const decorationsNoNitro: PriceItem[] = [
   { label: 'Украшение', priceUSD: 11.99, priceRUB: 459.99 },
   { label: 'Украшение', priceUSD: 12.99, priceRUB: 489.99 },
   { label: 'Украшение', priceUSD: 15.99, priceRUB: 589.99 },
-]
+], decorationsArt)
 
-export const bundlesNoNitro: PriceItem[] = withPackArt([
+export const bundlesNoNitro: PriceItem[] = withCardArt([
   { label: 'Набор', priceUSD: 10.99, priceRUB: 399.99 },
   { label: 'Набор', priceUSD: 12.99, priceRUB: 489.99 },
   { label: 'Набор', priceUSD: 15.99, priceRUB: 589.99 },
@@ -103,9 +98,9 @@ export const bundlesNoNitro: PriceItem[] = withPackArt([
   { label: 'Набор', priceUSD: 20.99, priceRUB: 709.99 },
   { label: 'Набор', priceUSD: 23.99, priceRUB: 869.99 },
   { label: 'Набор', priceUSD: 28.99, priceRUB: 999.99 },
-])
+], packsArt)
 
-export const decorationsWithNitro: PriceItem[] = [
+export const decorationsWithNitro: PriceItem[] = withCardArt([
   { label: 'Украшение', priceUSD: 4.99, priceRUB: 119.99 },
   { label: 'Украшение', priceUSD: 5.99, priceRUB: 159.99 },
   { label: 'Украшение', priceUSD: 6.99, priceRUB: 269.99 },
@@ -114,9 +109,9 @@ export const decorationsWithNitro: PriceItem[] = [
   { label: 'Украшение', priceUSD: 8.99, priceRUB: 379.99 },
   { label: 'Украшение', priceUSD: 9.99, priceRUB: 410.99 },
   { label: 'Украшение', priceUSD: 11.99, priceRUB: 459.99 },
-]
+], decorationsArt)
 
-export const bundlesWithNitro: PriceItem[] = [
+export const bundlesWithNitro: PriceItem[] = withCardArt([
   { label: 'Набор', priceUSD: 8.99, priceRUB: 379.99 },
   { label: 'Набор', priceUSD: 9.99, priceRUB: 389.99 },
   { label: 'Набор', priceUSD: 11.99, priceRUB: 459.99 },
@@ -124,7 +119,7 @@ export const bundlesWithNitro: PriceItem[] = [
   { label: 'Набор', priceUSD: 15.99, priceRUB: 589.99 },
   { label: 'Набор', priceUSD: 17.99, priceRUB: 679.99 },
   { label: 'Набор', priceUSD: 22.99, priceRUB: 849.99 },
-]
+], packsArt)
 
 export const faqData = [
   { q: 'Как сделать заказ?', a: 'Нажмите на кнопку «Перейти в Telegram-бот» — откроется чат с ботом. Выберите нужную категорию, товар и следуйте инструкциям. Весь процесс занимает несколько минут.' },

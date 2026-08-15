@@ -1,9 +1,10 @@
 /** Раскрытый вопрос помечен индиговым рельсом, а не только повёрнутым плюсом:
  *  в столбце из шести строк видно, какая открыта, даже боковым зрением. */
-export function FaqItem({ q, a, open, onToggle }: { q: string; a: string; open: boolean; onToggle: () => void }) {
+export function FaqItem({ q, a, open, onToggle, delay = 0 }: { q: string; a: string; open: boolean; onToggle: () => void; delay?: number }) {
   return (
     <div
-      className={`glass rounded-2xl relative overflow-hidden px-4 sm:px-5 transition-[background-color] duration-300 group ${open ? 'bg-white/[0.05]' : 'hover:bg-white/[0.06]'}`}
+      className={`glass rounded-2xl relative overflow-hidden px-4 sm:px-5 transition-[background-color] duration-300 group animate-fade-in ${open ? 'bg-white/[0.05]' : 'hover:bg-white/[0.06]'}`}
+      style={{ animationDelay: `${delay}ms` }}
     >
       <span
         aria-hidden

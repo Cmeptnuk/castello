@@ -1,5 +1,5 @@
 import { Fragment, useState, useEffect, useRef, useSyncExternalStore } from 'react'
-import { ShoppingCart, Menu, X } from 'lucide-react'
+import { ShoppingCart, Menu, UserRound, X } from 'lucide-react'
 import { SpeedInsights } from '@vercel/speed-insights/react'
 import { Analytics } from '@vercel/analytics/react'
 import { SLIDE_KEYS, slideFromPath } from './slides.ts'
@@ -12,10 +12,12 @@ import {
 import { PageChrome } from './components/PageChrome.tsx'
 import { PriceGrid } from './components/PriceGrid.tsx'
 import { ProductDialog } from './components/ProductDialog.tsx'
+import { AuthDialog } from './components/AuthDialog.tsx'
 import { FaqItem } from './components/FaqItem.tsx'
 import { CursorTrail } from './components/CursorTrail.tsx'
 import { SlideFade, SectionHeading, GlassPanel } from './components/ui.tsx'
 import { TelegramIcon, DiscordIcon, StepIcon, ShieldCheckIcon, ArrowRightIcon, CardIcon, CoinIcon, SbpIcon } from './components/icons.tsx'
+import { readProfile, type Profile } from './auth.ts'
 
 /* Vercel Resilient Intake: на сборке генерируется случайный путь для скрипта и
    приёма метрик, чтобы он не совпадал с /_vercel/*, который стоит в фильтрах
@@ -60,6 +62,11 @@ const processTracks = [
 ]
 
 const totalSlides = SLIDE_KEYS.length
+const motionDuration = (ms: number) => (
+  typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    ? Math.min(ms, 480)
+    : ms
+)
 /* Поля слайда держат содержимое в стороне от шасси: сверху — панель навигации,
    снизу — пагинация, по бокам — вертикальные подписи и углы. */
 const SLIDE_BOX = 'h-full overflow-y-auto px-10 sm:px-16 lg:px-24 pt-14 sm:pt-20 pb-16 sm:pb-20 flex flex-col items-center justify-center'
@@ -67,23 +74,42 @@ const SLIDE_BOX = 'h-full overflow-y-auto px-10 sm:px-16 lg:px-24 pt-14 sm:pt-20
 function App({ initialSlide = 0 }: { initialSlide?: number }) {
   // Стартовый слайд виден с первого кадра, а не после монтирования: иначе весь
   // первый экран красится прозрачным и Chrome не находит кандидата на LCP.
-  const initialClass = (i: number) => (i === initialSlide ? ' slide-initial' : '')
+  const [initialPaint, setInitialPaint] = useState(true)
+  const initialClass = (i: number) => (initialPaint && i === initialSlide ? ' slide-initial' : '')
   const [openFaq, setOpenFaq] = useState<number | null>(null)
   const [category, setCategory] = useState<CategoryTab>('decorations')
   const [nitroFilter, setNitroFilter] = useState<NitroTab>('no-nitro')
   const [slide, setSlide] = useState(initialSlide)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [menuClosing, setMenuClosing] = useState(false)
   const cart = useSyncExternalStore(subscribeCart, readCart, serverCart)
   const [cartOpen, setCartOpen] = useState(false)
+  const [cartClosing, setCartClosing] = useState(false)
+  const [profile, setProfile] = useState<Profile | null>(null)
+  const [profileOpen, setProfileOpen] = useState(false)
   const [detail, setDetail] = useState<PriceItem | null>(null)
   /* Стрелки листают слайды из обработчика, повешенного один раз на window, —
-     состояние он не увидит. Пока открыто окно товара, листать нельзя: слайд
-     уехал бы из-под окна. */
-  const detailRef = useRef<PriceItem | null>(null)
-  useEffect(() => { detailRef.current = detail }, [detail])
+     открытые поверх сайта инструменты поэтому отражаются в ref отдельно. */
+  const overlayRef = useRef(false)
+  useEffect(() => {
+    overlayRef.current = Boolean(detail || profileOpen || cartOpen || menuOpen)
+  }, [detail, profileOpen, cartOpen, menuOpen])
   const [toast, setToast] = useState('')
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const cartTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const menuTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
   const rootRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const controller = new AbortController()
+    readProfile(controller.signal)
+      .then(setProfile)
+      .catch((error) => {
+        if (error instanceof DOMException && error.name === 'AbortError') return
+        setProfile(null)
+      })
+    return () => controller.abort()
+  }, [])
 
   const onAdd = (item: PriceItem) => {
     writeCart([...cart, item])
@@ -93,10 +119,51 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
   }
   const removeFromCart = (index: number) => writeCart(cart.filter((_, i) => i !== index))
 
+  const openCart = () => {
+    clearTimeout(cartTimer.current)
+    setCartClosing(false)
+    setCartOpen(true)
+  }
+
+  const closeCart = (afterClose?: () => void) => {
+    if (!cartOpen || cartClosing) return
+    setCartClosing(true)
+    clearTimeout(cartTimer.current)
+    cartTimer.current = setTimeout(() => {
+      setCartOpen(false)
+      setCartClosing(false)
+      afterClose?.()
+    }, motionDuration(580))
+  }
+
+  const openMenu = () => {
+    clearTimeout(menuTimer.current)
+    setMenuClosing(false)
+    setMenuOpen(true)
+  }
+
+  const closeMenu = (afterClose?: () => void) => {
+    if (!menuOpen || menuClosing) return
+    setMenuClosing(true)
+    clearTimeout(menuTimer.current)
+    menuTimer.current = setTimeout(() => {
+      setMenuOpen(false)
+      setMenuClosing(false)
+      afterClose?.()
+    }, motionDuration(440))
+  }
+
+  useEffect(() => () => {
+    clearTimeout(toastTimer.current)
+    clearTimeout(cartTimer.current)
+    clearTimeout(menuTimer.current)
+  }, [])
+
   const slideRef = useRef(initialSlide)
   const slideNodes = useRef<(HTMLDivElement | null)[]>([])
   const busyRef = useRef(false)
   const prevSlide = useRef(slide)
+  const [slideTransition, setSlideTransition] = useState<{ from: number; to: number; direction: 'forward' | 'backward' } | null>(null)
   const [paymentSeq, setPaymentSeq] = useState(0)
 
   useEffect(() => {
@@ -145,12 +212,17 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
     const entering = slideNodes.current[idx]
     const leaving = slideNodes.current[prev]
     if (!entering || !leaving) return
+    const direction = idx > prev ? 'forward' : 'backward'
     busyRef.current = true
     slideRef.current = idx
     entering.style.zIndex = '20'
-    entering.style.opacity = '1'
+    leaving.style.zIndex = '10'
     entering.style.visibility = 'visible'
     entering.style.pointerEvents = 'auto'
+    leaving.style.pointerEvents = 'none'
+    // Состояние, а не ручной classList: React иначе синхронизирует className
+    // после setSlide и мгновенно стирает imperative-класс перехода в Firefox.
+    setSlideTransition({ from: prev, to: idx, direction })
     setSlide(idx)
     const key = SLIDE_KEYS[idx]
     const url = key === 'home' ? '/' : `/${key}`
@@ -161,18 +233,20 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
     }
     const cleanup = () => {
       busyRef.current = false
+      setSlideTransition(null)
       entering.style.zIndex = ''
       leaving.style.zIndex = ''
       leaving.style.visibility = 'hidden'
       leaving.style.pointerEvents = 'none'
-      leaving.style.opacity = ''
+      entering.style.visibility = ''
+      entering.style.pointerEvents = ''
     }
-    setTimeout(cleanup, 650)
+    setTimeout(cleanup, motionDuration(1100))
   }
 
   const wheelLockRef = useRef(false)
   const handleWheel = (e: React.WheelEvent) => {
-    if (busyRef.current || wheelLockRef.current || detail) return
+    if (busyRef.current || wheelLockRef.current || overlayRef.current) return
     wheelLockRef.current = true
     e.preventDefault()
     if (e.deltaY > 0) {
@@ -190,12 +264,11 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
       slideRef.current = start
       slideNodes.current.forEach((el, i) => {
         if (!el) return
-        // Дальше видимостью управляют инлайновые стили, класс больше не нужен
-        // и мешал бы goToSlide гасить слайд сбросом style.opacity.
+        // После первого клиентского кадра видимостью управляют is-active и
+        // React-состояние перехода, поэтому SSR-класс больше не нужен.
         el.classList.remove('slide-initial')
         if (i === start) {
           el.style.zIndex = ''
-          el.style.opacity = '1'
           el.style.visibility = 'visible'
           el.style.pointerEvents = 'auto'
         } else {
@@ -204,6 +277,8 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
         }
       })
       setSlide(start)
+      setSlideTransition(null)
+      setInitialPaint(false)
       if (path !== SLIDE_KEYS[start]) {
         const url = SLIDE_KEYS[start] === 'home' ? '/' : `/${SLIDE_KEYS[start]}`
         window.history.replaceState(null, '', url)
@@ -217,7 +292,7 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
     }
     window.addEventListener('popstate', handlePop)
     const handleKey = (e: KeyboardEvent) => {
-      if (detailRef.current) return
+      if (overlayRef.current) return
       if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
         e.preventDefault()
         goToSlide(slideRef.current + 1)
@@ -240,8 +315,15 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
       ? (nitroFilter === 'no-nitro' ? decorationsNoNitro : decorationsWithNitro)
       : (nitroFilter === 'no-nitro' ? bundlesNoNitro : bundlesWithNitro)
 
+  const slideMotionClass = (i: number) => {
+    if (!slideTransition) return ''
+    if (slideTransition.to === i) return ` slide-enter-${slideTransition.direction}`
+    if (slideTransition.from === i) return ` slide-exit-${slideTransition.direction}`
+    return ''
+  }
+
   return (
-    <div ref={rootRef} className="bg-[#070708] text-white h-svh overflow-hidden" onWheel={handleWheel}>
+    <div ref={rootRef} className="app-shell bg-[#070708] text-white h-svh overflow-hidden" onWheel={handleWheel}>
       {/* Пути берутся из Resilient Intake, если Vercel их выдал на сборке —
           иначе пакеты сами подставят штатные /_vercel/*. */}
       <SpeedInsights {...observability.speedInsights} />
@@ -264,9 +346,9 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
 
       <PageChrome slide={slide} onSelect={goToSlide} />
 
-      <nav className="fixed top-(--chrome-pad) left-0 right-0 z-40 flex items-center justify-between gap-2 px-11 sm:px-16">
+      <nav className="chrome-enter fixed top-(--chrome-pad) left-0 right-0 z-40 flex items-center justify-between gap-2 px-11 sm:px-16">
         <button
-          onClick={() => setMenuOpen(!menuOpen)}
+          onClick={() => menuOpen ? closeMenu() : openMenu()}
           className="glass glass-blur rounded-xl w-9 h-9 flex items-center justify-center sm:hidden transition-[background-color] hover:bg-white/[0.09]"
           aria-label={menuOpen ? 'Закрыть меню' : 'Открыть меню'}
           aria-expanded={menuOpen}
@@ -305,13 +387,27 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
             <DiscordIcon className="w-4.5 h-4.5 text-white/60" />
           </a>
           <div className="relative">
-            <button onClick={() => setCartOpen(true)}
+            <button
+              onClick={() => setProfileOpen(true)}
+              className="rounded-xl w-8 h-8 flex items-center justify-center transition-colors hover:bg-white/[0.08]"
+              aria-label={profile ? `Профиль: ${profile.displayName}` : 'Войти или зарегистрироваться'}
+              aria-haspopup="dialog"
+              title="Профиль"
+            >
+              <UserRound className={`w-4.5 h-4.5 transition-colors ${profile ? 'text-white/85' : 'text-white/60'}`} />
+            </button>
+            {profile && (
+              <span aria-hidden className="profile-status absolute right-0.5 bottom-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400 ring-2 ring-[#111114]" />
+            )}
+          </div>
+          <div className="relative">
+            <button onClick={openCart}
               className="rounded-xl w-8 h-8 flex items-center justify-center transition-colors hover:bg-white/[0.08]"
               aria-label={`Корзина, товаров: ${cart.length}`}>
               <ShoppingCart className="w-4.5 h-4.5 text-white/60" />
             </button>
             {cart.length > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-[3px] bg-white text-[#070708] text-[9px] font-bold flex items-center justify-center pointer-events-none">
+              <span key={cart.length} className="cart-count absolute -top-0.5 -right-0.5 w-4 h-4 rounded-[3px] bg-white text-[#070708] text-[9px] font-bold flex items-center justify-center pointer-events-none">
                 {cart.length}
               </span>
             )}
@@ -320,20 +416,20 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
       </nav>
 
       {cartOpen && (
-        <div className="fixed inset-0 z-50 flex justify-end">
-          <div className="absolute inset-0 bg-black/60" onClick={() => setCartOpen(false)} />
-          <div className="glass glass-blur relative w-full max-w-sm h-full flex flex-col animate-slide-in-right rounded-none">
+        <div className={`overlay-shell fixed inset-0 z-50 flex justify-end ${cartClosing ? 'is-exiting' : ''}`}>
+          <div className="overlay-backdrop absolute inset-0 bg-black/60" onClick={() => closeCart()} />
+          <div className="cart-drawer glass glass-blur relative w-full max-w-sm h-full flex flex-col rounded-none">
             <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
               <span className="text-sm font-medium text-white/80">Корзина ({cart.length})</span>
-              <button onClick={() => setCartOpen(false)} className="w-7 h-7 rounded-lg bg-white/[0.06] flex items-center justify-center hover:bg-white/15 transition-colors" aria-label="Закрыть корзину">
+              <button onClick={() => closeCart()} className="w-7 h-7 rounded-lg bg-white/[0.06] flex items-center justify-center hover:bg-white/15 transition-colors" aria-label="Закрыть корзину">
                 <X className="w-4 h-4 text-white/60" />
               </button>
             </div>
             {cart.length === 0 ? (
-              <div className="flex-1 flex flex-col items-center justify-center text-white/30 text-sm gap-3">
+              <div className="cart-empty flex-1 flex flex-col items-center justify-center text-white/30 text-sm gap-3">
                 <ShoppingCart className="w-10 h-10 text-white/20" />
                 <span>Пока пусто</span>
-                <button onClick={() => { setCartOpen(false); goToSlide(1) }} className="text-white/50 hover:text-white/80 underline underline-offset-4 transition-colors">
+                <button onClick={() => closeCart(() => goToSlide(1))} className="text-white/50 hover:text-white/80 underline underline-offset-4 transition-colors">
                   Открыть каталог
                 </button>
               </div>
@@ -341,7 +437,7 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
               <>
                 <div className="flex-1 overflow-y-auto px-5 py-4 space-y-2">
                   {cart.map((item, i) => (
-                    <div key={i} className="glass rounded-xl flex items-center justify-between px-4 py-3">
+                    <div key={`${item.label}-${item.priceRUB}-${i}`} className="cart-item glass rounded-xl flex items-center justify-between px-4 py-3" style={{ animationDelay: `${0.08 + i * 0.055}s` }}>
                       <div>
                         <div className="text-sm font-medium text-white/80">{item.label}</div>
                         <div className="text-xs text-white/40">{item.priceRUB} ₽</div>
@@ -352,7 +448,7 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
                     </div>
                   ))}
                 </div>
-                <div className="border-t border-white/[0.06] px-5 py-4 space-y-3">
+                <div className="cart-footer border-t border-white/[0.06] px-5 py-4 space-y-3">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-white/50">Итого</span>
                     <span className="font-semibold text-white">
@@ -381,15 +477,24 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
         />
       )}
 
+      {profileOpen && (
+        <AuthDialog
+          profile={profile}
+          onProfileChange={setProfile}
+          onClose={() => setProfileOpen(false)}
+        />
+      )}
+
       {menuOpen && (
-        <div className="fixed inset-0 z-30 sm:hidden bg-[#070708]/90 glass-blur flex flex-col items-center justify-center gap-4 animate-fade-in">
-          {navItems.map((item) => (
+        <div className={`mobile-menu fixed inset-0 z-30 sm:hidden bg-[#070708]/90 glass-blur flex flex-col items-center justify-center gap-4 ${menuClosing ? 'is-exiting' : ''}`}>
+          {navItems.map((item, i) => (
             <button
               key={item.key}
-              onClick={() => { goToSlide(SLIDE_KEYS.indexOf(item.key)); setMenuOpen(false) }}
-              className={`text-lg font-medium transition-colors ${
+              onClick={() => closeMenu(() => goToSlide(SLIDE_KEYS.indexOf(item.key)))}
+              className={`mobile-menu-item text-lg font-medium transition-colors ${
                 SLIDE_KEYS[slide] === item.key ? 'text-white' : 'text-white/40 hover:text-white/70'
               }`}
+              style={{ animationDelay: `${0.06 + i * 0.045}s` }}
             >
               {item.label}
             </button>
@@ -398,7 +503,7 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
       )}
 
       {toast && (
-        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 animate-fade-in" role="status">
+        <div className="toast-motion fixed bottom-20 left-1/2 -translate-x-1/2 z-50" role="status">
           <div className="glass glass-blur glass-strong rounded-xl text-white/90 text-sm px-5 py-2.5">
             {toast}
           </div>
@@ -409,7 +514,7 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
         {/* Slide 0: Hero */}
         <div
           ref={(el) => { slideNodes.current[0] = el }}
-          className={`flex slide-section absolute inset-0 items-center justify-center${initialClass(0)}`}
+          className={`flex slide-section absolute inset-0 items-center justify-center${initialClass(0)}${slide === 0 ? ' is-active' : ''}${slideMotionClass(0)}`}
           style={{ zIndex: 0 }}
         >
           <SlideFade active={slide === 0} delay={100} className="h-full w-full">
@@ -452,12 +557,12 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
         {/* Slide 1: Catalog */}
         <div
           ref={(el) => { slideNodes.current[1] = el }}
-          className={`slide-section absolute inset-0 flex items-center justify-center${initialClass(1)}`}
+          className={`slide-section absolute inset-0 flex items-center justify-center${initialClass(1)}${slide === 1 ? ' is-active' : ''}${slideMotionClass(1)}`}
           style={{ zIndex: 0 }}
         >
           <SlideFade active={slide === 1} delay={100} className="h-full w-full">
             <div className={SLIDE_BOX}>
-              <GlassPanel className="w-full max-w-6xl p-4 sm:p-6 lg:p-8">
+              <GlassPanel className="reveal-block w-full max-w-6xl p-4 sm:p-6 lg:p-8">
                 <div className="flex flex-col lg:flex-row gap-5 lg:gap-10">
                   <aside className="lg:w-56 shrink-0 flex flex-col gap-4">
                     <SectionHeading label="Каталог" title="Украшения и наборы" align="left" />
@@ -509,7 +614,7 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
                       key={category}
                       items={currentItems}
                       filler={category === 'bundles' ? { label: 'Свой вариант', desc: 'Напишите в бот' } : undefined}
-                      tabKey={category}
+                      tabKey={`${category}-${nitroFilter}`}
                       onAdd={onAdd}
                       onOpen={setDetail}
                     />
@@ -531,12 +636,12 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
         {/* Slide 2: How it works */}
         <div
           ref={(el) => { slideNodes.current[2] = el }}
-          className={`slide-section absolute inset-0 flex items-center justify-center${initialClass(2)}`}
+          className={`slide-section absolute inset-0 flex items-center justify-center${initialClass(2)}${slide === 2 ? ' is-active' : ''}${slideMotionClass(2)}`}
           style={{ zIndex: 0 }}
         >
           <SlideFade active={slide === 2} delay={100} className="h-full w-full">
             <div className={SLIDE_BOX}>
-              <div className="w-full max-w-6xl">
+              <div className="reveal-block w-full max-w-6xl">
                 <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-2 lg:gap-10 mb-6 lg:mb-10">
                   <SectionHeading label="Процесс" title="Как сделать заказ" align="left" />
                   <p className="text-white/30 text-sm leading-relaxed max-w-sm hidden lg:block">
@@ -600,12 +705,12 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
         {/* Slide 3: Payment */}
         <div
           ref={(el) => { slideNodes.current[3] = el }}
-          className={`slide-section absolute inset-0 flex items-center justify-center${initialClass(3)}`}
+          className={`slide-section absolute inset-0 flex items-center justify-center${initialClass(3)}${slide === 3 ? ' is-active' : ''}${slideMotionClass(3)}`}
           style={{ zIndex: 0 }}
         >
           <SlideFade active={slide === 3} delay={100} className="h-full w-full">
             <div key={`payment-${paymentSeq}`} className={SLIDE_BOX}>
-              <div className="w-full max-w-5xl flex flex-col lg:flex-row items-center gap-8 lg:gap-14">
+              <div className="reveal-block w-full max-w-5xl flex flex-col lg:flex-row items-center gap-8 lg:gap-14">
                 <div className="lg:w-1/2 flex flex-col items-center lg:items-start">
                   <span className="glass rounded-full inline-flex items-center gap-1.5 text-[10px] tracking-[0.2em] uppercase text-white/30 px-4 py-1.5 mb-3">
                     <ShieldCheckIcon className="w-3 h-3" />
@@ -698,12 +803,12 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
         {/* Slide 4: FAQ */}
         <div
           ref={(el) => { slideNodes.current[4] = el }}
-          className={`slide-section absolute inset-0 flex items-center justify-center${initialClass(4)}`}
+          className={`slide-section absolute inset-0 flex items-center justify-center${initialClass(4)}${slide === 4 ? ' is-active' : ''}${slideMotionClass(4)}`}
           style={{ zIndex: 0 }}
         >
           <SlideFade active={slide === 4} delay={100} className="h-full w-full">
             <div className={SLIDE_BOX}>
-              <div className="w-full max-w-5xl flex flex-col lg:flex-row gap-6 lg:gap-14">
+              <div className="reveal-block w-full max-w-5xl flex flex-col lg:flex-row gap-6 lg:gap-14">
                 <div className="lg:w-64 shrink-0 flex flex-col">
                   <SectionHeading label="FAQ" title="Частые вопросы" align="left" />
                   <p className="text-white/30 text-sm mt-3 leading-relaxed hidden lg:block">
@@ -738,7 +843,7 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
                   </div>
 
                   {faqData.map((item, i) => (
-                    <FaqItem key={item.q} q={item.q} a={item.a} open={openFaq === i} onToggle={() => setOpenFaq(openFaq === i ? null : i)} />
+                    <FaqItem key={item.q} q={item.q} a={item.a} open={openFaq === i} delay={110 + i * 55} onToggle={() => setOpenFaq(openFaq === i ? null : i)} />
                   ))}
                 </div>
               </div>
@@ -749,12 +854,12 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
         {/* Slide 5: Discord + CTA + Footer */}
         <div
           ref={(el) => { slideNodes.current[5] = el }}
-          className={`slide-section absolute inset-0 flex items-center justify-center${initialClass(5)}`}
+          className={`slide-section absolute inset-0 flex items-center justify-center${initialClass(5)}${slide === 5 ? ' is-active' : ''}${slideMotionClass(5)}`}
           style={{ zIndex: 0 }}
         >
           <SlideFade active={slide === 5} delay={100} className="h-full w-full">
             <div className={SLIDE_BOX}>
-              <div className="w-full max-w-5xl grid lg:grid-cols-2 gap-4">
+              <div className="reveal-block w-full max-w-5xl grid lg:grid-cols-2 gap-4">
                 <GlassPanel className="p-6 sm:p-8 flex flex-col items-start">
                   <span className="glass rounded-full inline-block text-[10px] tracking-[0.25em] uppercase text-white/30 px-4 py-1.5 mb-3">Сообщество</span>
                   <h2 className="text-2xl sm:text-3xl font-bold">Присоединяйтесь к Discord</h2>

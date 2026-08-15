@@ -25,6 +25,7 @@ export function PriceGrid({ items, filler, tabKey, onAdd, onOpen }: { items: Pri
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
       {items.map((item, i) => {
         const justAdded = added.has(i)
+        const image = item.thumb ?? item.art
         return (
           <div
             key={`${item.priceUSD}-${i}`}
@@ -44,25 +45,23 @@ export function PriceGrid({ items, filler, tabKey, onAdd, onOpen }: { items: Pri
             className="zoom-card glass glass-tinted rounded-2xl p-2 sm:p-2.5 flex flex-col gap-2 sm:gap-2.5 animate-fade-in group cursor-pointer hover:bg-white/[0.07]"
             style={{ animationDelay: `${0.05 + i * 0.08}s` }}
           >
-            {/* Превью уже квадратное и обрезано на сборке: слева на арте свой
-                текстовый блок с ценой, снизу полоса со способами оплаты — в
-                плитке они спорили бы с ценой самого каталога. Остаётся то,
-                ради чего арт и нужен, — сам товар. */}
-            <div className="relative aspect-square rounded-xl overflow-hidden bg-white/[0.03] ring-1 ring-inset ring-white/[0.06] transition-[box-shadow] duration-500 group-hover:ring-white/15">
-              {item.thumb ? (
+            {/* Арты имеют формат около 16:9. Показываем кадр целиком, чтобы
+                встроенные в изображение заголовки не обрезались по бокам. */}
+            <div className="relative aspect-video rounded-xl overflow-hidden bg-black/40 ring-1 ring-inset ring-white/[0.06] transition-[box-shadow] duration-500 group-hover:ring-white/15">
+              {image ? (
                 /* Не lazy: плитки лежат в скрытом слайде, и с отложенной
                    загрузкой все восемь картинок уходили в сеть и в декодер
                    ровно в тот кадр, когда каталог открывают. Низкий приоритет
                    оставляет их позади первого экрана — к открытию каталога
                    они уже в кэше. */
                 <img
-                  src={item.thumb}
+                  src={image}
                   alt=""
-                  width={400}
-                  height={400}
+                  width={640}
+                  height={360}
                   fetchPriority="low"
                   decoding="async"
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain"
                 />
               ) : (
                 /* Арт для этой группы ещё не нарисован. Пустой кадр с меткой
@@ -117,7 +116,7 @@ export function PriceGrid({ items, filler, tabKey, onAdd, onOpen }: { items: Pri
           className="rounded-2xl border border-dashed border-white/[0.08] p-2 sm:p-2.5 flex flex-col gap-2 sm:gap-2.5 hover:border-white/15 transition-colors duration-500 animate-fade-in group"
           style={{ animationDelay: `${0.05 + items.length * 0.08}s` }}
         >
-          <div className="aspect-square rounded-xl bg-white/[0.02] flex items-center justify-center">
+          <div className="aspect-video rounded-xl bg-white/[0.02] flex items-center justify-center">
             <span className="w-9 h-9 rounded-full border border-dashed border-white/15 flex items-center justify-center text-white/25 transition-colors duration-500 group-hover:border-white/25 group-hover:text-white/50">
               <Plus className="w-4 h-4" />
             </span>
