@@ -67,7 +67,7 @@ export const catalogCopy: Record<CategoryTab, Record<NitroTab, CatalogCopy>> = {
    numeric:true сохраняет ожидаемый порядок Decorations1, Decorations2, ...
    даже если позже появятся двузначные номера. */
 const sortedCardImages = (folder: 'Decorations' | 'Packs', prefix: 'Decorations' | 'Packs', count: number) =>
-  Array.from({ length: count }, (_, index) => `/ItemsCards/${folder}/${prefix}${index + 1}.png`)
+  Array.from({ length: count }, (_, index) => `/ItemsCards/${folder}/${prefix}${index + 1}.webp`)
     .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }))
 
 const decorationsArt = sortedCardImages('Decorations', 'Decorations', 8)
@@ -76,9 +76,7 @@ const packsArt = sortedCardImages('Packs', 'Packs', 7)
 const withCardArt = (items: PriceItem[], images: string[]): PriceItem[] =>
   items.map((item, index) => {
     const art = images[index]
-    const thumb = art
-      ?.replace('/ItemsCards/', '/ItemsCards/Thumbs/')
-      .replace(/\.png$/, '.webp')
+    const thumb = art?.replace('/ItemsCards/', '/ItemsCards/Thumbs/')
     return art ? { ...item, art, thumb } : item
   })
 

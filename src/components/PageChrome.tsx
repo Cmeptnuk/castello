@@ -40,19 +40,19 @@ export function PageChrome({ slide, onSelect }: { slide: number; onSelect: (i: n
           {TELEGRAM_URL.replace('https://', '')}
         </span>
 
-        <nav aria-label="Слайды" className="pointer-events-auto flex items-center gap-3">
-          <span aria-hidden className="font-mono text-[10px] tracking-wider tabular-nums select-none">
+        <nav aria-label="Слайды" className="pointer-events-auto flex items-center gap-0 sm:gap-3">
+          <span aria-hidden className="hidden sm:inline font-mono text-[10px] tracking-wider tabular-nums select-none">
             <span className="text-white/65">{String(slide + 1).padStart(2, '0')}</span>
             <span className="text-white/50"> / {String(total).padStart(2, '0')}</span>
           </span>
-          <span className="flex items-center gap-1.5">
+          <span className="flex items-center gap-0 sm:gap-1">
             {navItems.map((item, i) => (
               <button
                 key={item.key}
                 onClick={() => onSelect(i)}
                 aria-label={item.label}
                 aria-current={i === slide ? 'true' : undefined}
-                className="group grid h-6 place-items-center px-0.5"
+                className="group grid w-12 h-12 place-items-center touch-manipulation"
               >
                 <span
                   className={`block h-1 rounded-full transition-all duration-500 ease-out ${
