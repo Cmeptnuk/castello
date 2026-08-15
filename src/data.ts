@@ -76,7 +76,10 @@ const packsArt = sortedCardImages('Packs', 'Packs', 7)
 const withCardArt = (items: PriceItem[], images: string[]): PriceItem[] =>
   items.map((item, index) => {
     const art = images[index]
-    return art ? { ...item, art } : item
+    const thumb = art
+      ?.replace('/ItemsCards/', '/ItemsCards/Thumbs/')
+      .replace(/\.png$/, '.webp')
+    return art ? { ...item, art, thumb } : item
   })
 
 export const decorationsNoNitro: PriceItem[] = withCardArt([

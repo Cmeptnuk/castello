@@ -217,14 +217,13 @@
 }
 
 @keyframes cart-item-remove {
-  0% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); max-height: 5rem }
-  62% { opacity: 0; transform: translate3d(36px, 0, 0) scale(0.96); max-height: 5rem; padding-top: 0.75rem; padding-bottom: 0.75rem; margin-bottom: 0 }
-  100% { opacity: 0; transform: translate3d(48px, -4px, 0) scale(0.94); max-height: 0; padding-top: 0; padding-bottom: 0; margin-bottom: -0.5rem }
+  from { opacity: 1; transform: translate3d(0, 0, 0) scale(1) }
+  to { opacity: 0; transform: translate3d(18px, 0, 0) scale(0.985) }
 }
 
 @keyframes remove-icon-exit {
-  from { transform: scale(1) rotate(0) }
-  to { transform: scale(0.45) rotate(90deg) }
+  from { opacity: 1; transform: scale(1) }
+  to { opacity: 0; transform: scale(0.7) }
 }
 
 @keyframes chrome-enter {
@@ -271,6 +270,17 @@ html {
 
 body {
   margin: 0;
+}
+
+.app-shell {
+  height: 100vh;
+  height: 100svh;
+}
+
+.slide-scroller {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  touch-action: pan-y;
 }
 
 ::-webkit-scrollbar {
@@ -355,6 +365,34 @@ html {
     var(--glass-bg);
 }
 
+.home-offer-card {
+  transform: scale(1);
+  transition-property: transform, background-color, box-shadow;
+  transition-duration: 1s;
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.home-offer-card > svg {
+  transition: color 1s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 1s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .home-offer-card:hover {
+    z-index: 2;
+    background-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.28),
+      inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    transform: translateY(-2px) scale(1.02);
+    will-change: transform;
+  }
+
+  .home-offer-card:hover > svg {
+    color: rgba(255, 255, 255, 0.72);
+    transform: translateX(4px);
+  }
+}
+
 /* Наведение на карточку — одно движение: она целиком подрастает. Масштаб
    описывается одним :hover, поэтому не стоит ни кадра работы в JS — раньше
    здесь был наклон к курсору, и трансформ пересчитывался на каждое движение
@@ -379,6 +417,24 @@ html {
     will-change: transform;
     z-index: 10;
   }
+
+  .zoom-card.product-card:hover {
+    transform: none;
+  }
+
+  .product-card:hover .catalog-card-image {
+    top: -2%;
+    left: -2%;
+    width: 104%;
+    height: 104%;
+  }
+}
+
+.catalog-card-image {
+  image-rendering: auto;
+  transition-property: top, left, width, height;
+  transition-duration: 0.7s;
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* ─── Шасси страницы ───────────────────────────────────────────────────────
@@ -605,13 +661,28 @@ html {
 }
 
 .cart-item.is-removing {
-  overflow: hidden;
   pointer-events: none;
-  animation: cart-item-remove 0.48s cubic-bezier(0.4, 0, 0.2, 1) both;
+  will-change: transform, opacity;
+  animation: cart-item-remove 0.26s cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 
 .cart-item.is-removing .cart-remove-button svg {
-  animation: remove-icon-exit 0.3s ease-in both;
+  animation: remove-icon-exit 0.18s ease-out both;
+}
+
+.faq-answer {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s ease;
+}
+
+.faq-answer.is-open {
+  grid-template-rows: 1fr;
+}
+
+.faq-answer > div {
+  min-height: 0;
+  overflow: hidden;
 }
 
 .product-dialog,
@@ -1212,6 +1283,11 @@ html {
     animation-delay: 0s !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.14s !important;
+  }
+
+  .home-offer-card,
+  .home-offer-card > svg {
+    transition-duration: 1s !important;
   }
 
   .slide-enter-forward,

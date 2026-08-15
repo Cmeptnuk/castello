@@ -22,7 +22,7 @@ export function PriceGrid({ items, filler, tabKey, onAdd, onOpen }: { items: Pri
       {/* Четыре колонки — потолок: в любой категории ровно восемь плиток, и на
           четырёх они складываются в два полных ряда, а на пяти последний ряд
           остаётся рваным. */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 min-[56rem]:grid-cols-4 gap-3">
       {items.map((item, i) => {
         const justAdded = added.has(i)
         const image = item.thumb ?? item.art
@@ -42,26 +42,25 @@ export function PriceGrid({ items, filler, tabKey, onAdd, onOpen }: { items: Pri
                 onOpen?.(item)
               }
             }}
-            className={`zoom-card glass glass-tinted rounded-2xl p-2 sm:p-2.5 flex flex-col gap-2 sm:gap-2.5 animate-fade-in group cursor-pointer hover:bg-white/[0.07] ${justAdded ? 'is-added' : ''}`}
+            className={`product-card zoom-card glass glass-tinted rounded-2xl p-3 sm:p-2.5 flex flex-col gap-3 sm:gap-2.5 animate-fade-in group cursor-pointer hover:bg-white/[0.07] ${justAdded ? 'is-added' : ''}`}
             style={{ animationDelay: justAdded ? '0s' : `${0.05 + i * 0.08}s` }}
           >
             {/* Арты имеют формат около 16:9. Показываем кадр целиком, чтобы
                 встроенные в изображение заголовки не обрезались по бокам. */}
             <div className="relative aspect-video rounded-xl overflow-hidden bg-black/40 ring-1 ring-inset ring-white/[0.06] transition-[box-shadow] duration-500 group-hover:ring-white/15">
               {image ? (
-                /* Не lazy: плитки лежат в скрытом слайде, и с отложенной
-                   загрузкой все восемь картинок уходили в сеть и в декодер
-                   ровно в тот кадр, когда каталог открывают. Низкий приоритет
-                   оставляет их позади первого экрана — к открытию каталога
-                   они уже в кэше. */
+                /* Превью маленькие и ленивые: скрытый каталог не забирает весь
+                   вес изображений на первом экране, а при открытии каталога
+                   браузер подгружает только карточки рядом с viewport. */
                 <img
                   src={image}
                   alt=""
                   width={640}
                   height={360}
+                  loading="lazy"
                   fetchPriority="low"
                   decoding="async"
-                  className="w-full h-full object-contain"
+                  className="catalog-card-image absolute top-0 left-0 w-full h-full max-w-none object-contain"
                 />
               ) : (
                 /* Арт для этой группы ещё не нарисован. Пустой кадр с меткой
@@ -77,11 +76,11 @@ export function PriceGrid({ items, filler, tabKey, onAdd, onOpen }: { items: Pri
               {item.art && (
                 /* Метка стоит на самой картинке, а не под ней: спутать товар с
                    артом можно только глядя на арт. */
-                <span className="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded-md bg-black/55 text-[9px] tracking-wide text-white/70">
+                <span className="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded-md bg-black/80 text-[9px] tracking-wide text-white/100">
                   Пример
                 </span>
               )}
-              <span className="absolute left-2 bottom-1.5 text-[10px] font-medium tracking-wide text-white/60 group-hover:text-white/85 transition-colors duration-300">
+              <span className="absolute left-2 bottom-1.5 text-xs sm:text-[10px] font-medium tracking-wide text-white/70 sm:text-white/60 group-hover:text-white/85 transition-colors duration-300">
                 {item.label}
               </span>
               <span aria-hidden className="absolute right-2 bottom-1.5 text-[10px] font-medium text-white/0 group-hover:text-white/70 transition-colors duration-300">
@@ -91,8 +90,8 @@ export function PriceGrid({ items, filler, tabKey, onAdd, onOpen }: { items: Pri
 
             <div className="flex items-center justify-between gap-2 px-1 pb-0.5">
               <div className="min-w-0 leading-tight">
-                <div className="text-sm sm:text-base font-bold text-white/90 tabular-nums">${item.priceUSD}</div>
-                <div className="text-[10px] sm:text-[11px] text-white/30 tabular-nums">{item.priceRUB} ₽</div>
+                <div className="text-base font-bold text-white/90 tabular-nums">${item.priceUSD}</div>
+                <div className="text-xs sm:text-[11px] text-white/35 sm:text-white/30 tabular-nums">{item.priceRUB} ₽</div>
               </div>
               <button
                 onClick={(e) => { e.stopPropagation(); handleAdd(i, item, e.currentTarget) }}
@@ -113,7 +112,7 @@ export function PriceGrid({ items, filler, tabKey, onAdd, onOpen }: { items: Pri
            последняя ячейка не выпадала из ряда. Арта у неё нет и не будет:
            это не товар, а приглашение написать в бот. */
         <div
-          className="rounded-2xl border border-dashed border-white/[0.08] p-2 sm:p-2.5 flex flex-col gap-2 sm:gap-2.5 hover:border-white/15 transition-colors duration-500 animate-fade-in group"
+          className="rounded-2xl border border-dashed border-white/[0.08] p-3 sm:p-2.5 flex flex-col gap-3 sm:gap-2.5 hover:border-white/15 transition-colors duration-500 animate-fade-in group"
           style={{ animationDelay: `${0.05 + items.length * 0.08}s` }}
         >
           <div className="aspect-video rounded-xl bg-white/[0.02] flex items-center justify-center">

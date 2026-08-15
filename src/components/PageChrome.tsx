@@ -23,27 +23,27 @@ export function PageChrome({ slide, onSelect }: { slide: number; onSelect: (i: n
         {/* Марка слева, раздел справа — рельсы забирают поля, которые иначе
             остаются пустыми на широком экране. */}
         <span
-          className="chrome-vtext absolute left-(--chrome-pad) top-1/2 -translate-y-1/2 text-[8px] sm:text-[10px] tracking-[0.4em] uppercase text-white/12 select-none"
+          className="chrome-vtext absolute left-(--chrome-pad) top-1/2 -translate-y-1/2 text-[8px] sm:text-[10px] tracking-[0.4em] uppercase text-white/50 select-none"
         >
           Castello Shop
         </span>
         <span
           key={section}
-          className="chrome-vtext absolute right-(--chrome-pad) top-1/2 -translate-y-1/2 text-[8px] sm:text-[10px] tracking-[0.4em] uppercase text-brand/40 select-none animate-fade-in"
+          className="chrome-vtext absolute right-(--chrome-pad) top-1/2 -translate-y-1/2 text-[8px] sm:text-[10px] tracking-[0.4em] uppercase text-[#9ba3ff] select-none animate-fade-in"
         >
           {section}
         </span>
       </div>
 
       <div className="fixed inset-x-0 bottom-(--chrome-pad) z-20 pointer-events-none flex items-center justify-center px-14 sm:px-20">
-        <span aria-hidden className="hidden sm:block absolute left-20 text-[10px] tracking-wider text-white/12 select-none">
+        <span aria-hidden className="hidden sm:block absolute left-20 text-[10px] tracking-wider text-white/50 select-none">
           {TELEGRAM_URL.replace('https://', '')}
         </span>
 
         <nav aria-label="Слайды" className="pointer-events-auto flex items-center gap-3">
           <span aria-hidden className="font-mono text-[10px] tracking-wider tabular-nums select-none">
-            <span className="text-white/40">{String(slide + 1).padStart(2, '0')}</span>
-            <span className="text-white/15"> / {String(total).padStart(2, '0')}</span>
+            <span className="text-white/65">{String(slide + 1).padStart(2, '0')}</span>
+            <span className="text-white/50"> / {String(total).padStart(2, '0')}</span>
           </span>
           <span className="flex items-center gap-1.5">
             {navItems.map((item, i) => (
@@ -68,7 +68,7 @@ export function PageChrome({ slide, onSelect }: { slide: number; onSelect: (i: n
 
         {/* Подсказка про стрелки — только там, где есть клавиатура: на
             телефоне листают теми же точками, свайпа в приложении нет. */}
-        <span aria-hidden className="hidden sm:block absolute right-20 text-[10px] tracking-wider text-white/12 select-none">
+        <span aria-hidden className="hidden sm:block absolute right-20 text-[10px] tracking-wider text-white/50 select-none">
           ↑ ↓ листать
         </span>
       </div>

@@ -1,4 +1,4 @@
-import { Fragment, useState, useEffect, useRef, useSyncExternalStore, useCallback, type CSSProperties } from 'react'
+import { Fragment, useState, useEffect, useLayoutEffect, useRef, useSyncExternalStore, useCallback, type CSSProperties } from 'react'
 import { ShoppingCart, Menu, UserRound, X } from 'lucide-react'
 import { SpeedInsights } from '@vercel/speed-insights/react'
 import { Analytics } from '@vercel/analytics/react'
@@ -39,8 +39,25 @@ const observability: ObservabilityConfig = (() => {
 
 const facts = [
   { value: '10–15 мин', label: 'выдача после оплаты' },
-  { value: 'Карты РФ, СБП', label: 'и криптовалюта' },
+  { value: 'Карты РФ, СБП', label: 'TON, USDT (TON / TRC-20), Solana' },
   { value: 'С Nitro и без', label: 'отдельные категории' },
+]
+
+const homeOffers = [
+  {
+    key: 'decorations' as const,
+    label: 'Украшения',
+    desc: 'Рамки, баннеры и цвета ника',
+    price: Math.min(...decorationsNoNitro.map((item) => item.priceRUB), ...decorationsWithNitro.map((item) => item.priceRUB)),
+    art: decorationsWithNitro[0]?.thumb ?? decorationsWithNitro[0]?.art,
+  },
+  {
+    key: 'bundles' as const,
+    label: 'Наборы',
+    desc: 'Несколько элементов в одном стиле',
+    price: Math.min(...bundlesNoNitro.map((item) => item.priceRUB), ...bundlesWithNitro.map((item) => item.priceRUB)),
+    art: bundlesWithNitro[0]?.thumb ?? bundlesWithNitro[0]?.art,
+  },
 ]
 
 /* У СБП свой знак и свои цвета, поэтому строка помечена как `mark`: такой
@@ -67,9 +84,21 @@ const motionDuration = (ms: number) => (
     ? Math.min(ms, 480)
     : ms
 )
+
+const cartItemKey = (items: PriceItem[], index: number) => {
+  const item = items[index]
+  const identity = `${item.label}:${item.priceUSD}:${item.priceRUB}`
+  let occurrence = 0
+  for (let i = 0; i < index; i += 1) {
+    const previous = items[i]
+    if (`${previous.label}:${previous.priceUSD}:${previous.priceRUB}` === identity) occurrence += 1
+  }
+  return `${identity}:${occurrence}`
+}
+
 /* Поля слайда держат содержимое в стороне от шасси: сверху — панель навигации,
    снизу — пагинация, по бокам — вертикальные подписи и углы. */
-const SLIDE_BOX = 'h-full overflow-y-auto px-8 sm:px-16 lg:px-24 pt-20 pb-20 flex flex-col items-center justify-start lg:justify-center'
+const SLIDE_BOX = 'slide-scroller h-full overflow-y-auto px-8 sm:px-16 lg:px-24 pt-20 pb-20 flex flex-col items-center justify-start min-[56rem]:justify-center'
 
 type CartFlight = {
   id: number
@@ -115,7 +144,53 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
   const removeTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
   const flightTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
   const cartButtonRef = useRef<HTMLDivElement>(null)
+  const cartListRef = useRef<HTMLDivElement>(null)
+  const cartPositionsRef = useRef(new Map<string, number>())
+  const cartMoveFrame = useRef<number | null>(null)
   const rootRef = useRef<HTMLDivElement>(null)
+
+  useLayoutEffect(() => {
+    const list = cartListRef.current
+    if (!list) return
+
+    const elements = Array.from(list.querySelectorAll<HTMLElement>('[data-cart-key]'))
+    const previousPositions = cartPositionsRef.current
+    const shifts: Array<{ element: HTMLElement; delta: number }> = []
+
+    elements.forEach((element) => {
+      const key = element.dataset.cartKey
+      if (!key) return
+      const previousTop = previousPositions.get(key)
+      if (previousTop === undefined) return
+      const delta = previousTop - element.getBoundingClientRect().top
+      if (Math.abs(delta) > 1) shifts.push({ element, delta })
+    })
+
+    elements.forEach((element) => {
+      const key = element.dataset.cartKey
+      if (key) cartPositionsRef.current.set(key, element.getBoundingClientRect().top)
+    })
+
+    if (cartMoveFrame.current !== null) cancelAnimationFrame(cartMoveFrame.current)
+    shifts.forEach(({ element, delta }) => {
+      element.style.transition = 'none'
+      element.style.transform = `translate3d(0, ${delta}px, 0)`
+    })
+    cartMoveFrame.current = requestAnimationFrame(() => {
+      shifts.forEach(({ element }) => {
+        element.style.transition = 'transform 420ms cubic-bezier(0.22, 1, 0.36, 1)'
+        element.style.transform = ''
+      })
+      cartMoveFrame.current = null
+    })
+
+    return () => {
+      if (cartMoveFrame.current !== null) {
+        cancelAnimationFrame(cartMoveFrame.current)
+        cartMoveFrame.current = null
+      }
+    }
+  }, [cart, cartOpen])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -156,7 +231,7 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
       const current = readCart()
       if (current[index]) writeCart(current.filter((_, i) => i !== index))
       setRemovingCartIndex(null)
-    }, motionDuration(480))
+    }, motionDuration(260))
   }
 
   const openCart = () => {
@@ -249,11 +324,18 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
 
   const goToSlide = (i: number, replace = false) => {
     const idx = Math.max(0, Math.min(i, totalSlides - 1))
-    if (idx === slideRef.current || busyRef.current) return
+    if (idx === slideRef.current) {
+      const currentScroller = slideNodes.current[idx]?.querySelector<HTMLElement>('.slide-content > div')
+      if (currentScroller) currentScroller.scrollTop = 0
+      return
+    }
+    if (busyRef.current) return
     const prev = slideRef.current
     const entering = slideNodes.current[idx]
     const leaving = slideNodes.current[prev]
     if (!entering || !leaving) return
+    const enteringScroller = entering.querySelector<HTMLElement>('.slide-content > div')
+    if (enteringScroller) enteringScroller.scrollTop = 0
     const direction = idx > prev ? 'forward' : 'backward'
     busyRef.current = true
     slideRef.current = idx
@@ -304,6 +386,8 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
       const path = window.location.pathname.slice(1)
       const start = slideFromPath(window.location.pathname)
       slideRef.current = start
+      const activeScroller = slideNodes.current[start]?.querySelector<HTMLElement>('.slide-content > div')
+      if (activeScroller) activeScroller.scrollTop = 0
       slideNodes.current.forEach((el, i) => {
         if (!el) return
         // После первого клиентского кадра видимостью управляют is-active и
@@ -356,6 +440,21 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
     category === 'decorations'
       ? (nitroFilter === 'no-nitro' ? decorationsNoNitro : decorationsWithNitro)
       : (nitroFilter === 'no-nitro' ? bundlesNoNitro : bundlesWithNitro)
+
+  const resetCatalogScroll = () => {
+    const scroller = slideNodes.current[1]?.querySelector<HTMLElement>('.slide-content > div')
+    if (scroller) scroller.scrollTop = 0
+  }
+
+  const selectCategory = (next: CategoryTab) => {
+    setCategory(next)
+    resetCatalogScroll()
+  }
+
+  const selectNitroFilter = (next: NitroTab) => {
+    setNitroFilter(next)
+    resetCatalogScroll()
+  }
 
   const slideMotionClass = (i: number) => {
     if (!slideTransition) return ''
@@ -425,7 +524,7 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
               className={`px-3 lg:px-4 py-1.5 rounded-xl text-xs lg:text-sm font-medium whitespace-nowrap transition-all duration-300 ${
                 SLIDE_KEYS[slide] === item.key
                   ? 'bg-white/10 text-white'
-                  : 'text-white/35 hover:text-white/70'
+                  : 'text-white/60 hover:text-white/85'
               }`}
             >
               {item.label}
@@ -496,9 +595,9 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
               </div>
             ) : (
               <>
-                <div className="cart-list flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-2">
+                <div ref={cartListRef} className="cart-list flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-2">
                   {cart.map((item, i) => (
-                    <div key={`${item.label}-${item.priceRUB}-${i}`} className={`cart-item glass rounded-xl flex items-center justify-between px-4 py-3 ${removingCartIndex === i ? 'is-removing' : ''}`} style={{ animationDelay: removingCartIndex === i ? '0s' : `${0.08 + i * 0.055}s` }}>
+                    <div data-cart-key={cartItemKey(cart, i)} key={cartItemKey(cart, i)} className={`cart-item glass rounded-xl flex items-center justify-between px-4 py-3 ${removingCartIndex === i ? 'is-removing' : ''}`} style={{ animationDelay: removingCartIndex === i ? '0s' : `${0.08 + i * 0.055}s` }}>
                       <div>
                         <div className="text-sm font-medium text-white/80">{item.label}</div>
                         <div className="text-xs text-white/40">{item.priceRUB} ₽</div>
@@ -552,7 +651,7 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
               key={item.key}
               onClick={() => closeMenu(() => goToSlide(SLIDE_KEYS.indexOf(item.key)))}
               className={`mobile-menu-item text-lg font-medium transition-colors ${
-                SLIDE_KEYS[slide] === item.key ? 'text-white' : 'text-white/40 hover:text-white/70'
+                SLIDE_KEYS[slide] === item.key ? 'text-white' : 'text-white/60 hover:text-white/85'
               }`}
               style={{ animationDelay: `${0.06 + i * 0.045}s` }}
             >
@@ -580,33 +679,54 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
           <SlideFade active={slide === 0} delay={100} className="h-full w-full">
             <div className={SLIDE_BOX}>
               <div className="animate-rise-in" style={{ animationDelay: '0.1s' }}>
-                <span className="glass rounded-full inline-block text-[10px] tracking-[0.3em] uppercase text-white/30 px-5 py-2">Castello Shop</span>
+                <span className="glass rounded-full inline-block text-[10px] tracking-[0.3em] uppercase text-white/60 px-5 py-2">Castello Shop</span>
               </div>
               <h1 className="animate-rise-in mt-4 text-4xl xs:text-5xl sm:text-7xl md:text-8xl font-bold tracking-tight leading-none text-center" style={{ animationDelay: '0.2s' }}>
                 <span className="bg-gradient-to-r from-white via-gray-200 to-white/40 bg-clip-text text-transparent">Castello</span>
               </h1>
-              <p className="animate-rise-in mt-3 text-white/40 text-base sm:text-lg max-w-xl leading-relaxed text-center" style={{ animationDelay: '0.35s' }}>
+              <p className="animate-rise-in mt-3 text-white/65 text-base sm:text-lg max-w-xl leading-relaxed text-center" style={{ animationDelay: '0.35s' }}>
                 Кастомизация Discord: украшения и наборы для профиля. Без Nitro и с Nitro.
               </p>
-              <div className="animate-rise-in mt-6" style={{ animationDelay: '0.5s' }}>
+              <div className="animate-rise-in mt-6 flex flex-col sm:flex-row items-center justify-center gap-2" style={{ animationDelay: '0.5s' }}>
                 <a href={TELEGRAM_URL} target="_blank" rel="noopener noreferrer"
-                  className="group relative inline-flex items-center gap-3 px-8 py-4 bg-white text-[#070708] font-semibold text-base rounded-2xl transition-all duration-300 hover:bg-gray-100 hover:scale-[1.03] active:scale-95"
+                  className="inline-flex items-center justify-center gap-2 px-5 py-3.5 whitespace-nowrap glass rounded-2xl text-white/65 hover:text-white/90 hover:bg-white/[0.08] font-medium text-sm transition-colors"
                 >
-                  <span className="absolute -inset-1 rounded-2xl bg-white/15 opacity-0 blur-lg transition-opacity duration-300 group-hover:opacity-100" />
-                  <span className="relative flex items-center gap-3">
-                    <TelegramIcon className="w-5 h-5" />
-                    Перейти в Telegram-бот
-                  </span>
+                  <TelegramIcon className="w-4 h-4" />
+                  Telegram-бот
                 </a>
+              </div>
+
+              <div className="mt-6 w-full max-w-2xl grid sm:grid-cols-2 gap-2 animate-glass-settle" style={{ animationDelay: '0.62s' }}>
+                {homeOffers.map((offer) => (
+                  <button
+                    key={offer.key}
+                    onClick={() => {
+                      selectCategory(offer.key)
+                      goToSlide(1)
+                    }}
+                    className="home-offer-card group glass glass-tinted rounded-2xl p-2.5 flex items-center gap-3 text-left"
+                  >
+                    <span className="relative w-20 sm:w-24 aspect-video shrink-0 overflow-hidden rounded-xl bg-black/40 ring-1 ring-inset ring-white/[0.08]">
+                      {offer.art && <img src={offer.art} alt="" decoding="async" className="w-full h-full object-cover" />}
+                      <span aria-hidden className="absolute inset-0 bg-gradient-to-r from-transparent to-black/20" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-semibold text-white/85">{offer.label}</span>
+                      <span className="block text-[11px] text-white/60 leading-snug mt-0.5">{offer.desc}</span>
+                      <span className="block text-xs text-white/65 tabular-nums mt-1">от {offer.price.toFixed(2)} ₽</span>
+                    </span>
+                    <ArrowRightIcon className="w-3.5 h-3.5 shrink-0 text-white/20 transition-transform group-hover:translate-x-0.5 group-hover:text-white/50" />
+                  </button>
+                ))}
               </div>
 
               {/* Три факта, которые иначе пришлось бы искать в FAQ: срок
                   выдачи, способы оплаты, деление на категории. */}
-              <div className="glass glass-blur rounded-2xl mt-8 sm:mt-10 w-full max-w-2xl grid grid-cols-3 animate-glass-settle" style={{ animationDelay: '0.65s' }}>
+              <div className="glass glass-blur rounded-2xl mt-3 w-full max-w-2xl grid grid-cols-3 animate-glass-settle" style={{ animationDelay: '0.72s' }}>
                 {facts.map((fact) => (
                   <div key={fact.value} className="px-2 sm:px-5 py-3 sm:py-4 text-center border-l border-white/[0.05] first:border-l-0">
                     <div className="text-[11px] sm:text-sm font-semibold text-white/80">{fact.value}</div>
-                    <div className="text-[10px] sm:text-xs text-white/30 mt-0.5 leading-tight">{fact.label}</div>
+                    <div className="text-[10px] sm:text-xs text-white/60 mt-0.5 leading-tight">{fact.label}</div>
                   </div>
                 ))}
               </div>
@@ -622,18 +742,18 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
         >
           <SlideFade active={slide === 1} delay={100} className="h-full w-full">
             <div className={SLIDE_BOX}>
-              <GlassPanel className="reveal-block w-full max-w-6xl p-4 sm:p-6 lg:p-8">
-                <div className="flex flex-col lg:flex-row gap-5 lg:gap-10">
-                  <aside className="lg:w-56 shrink-0 flex flex-col gap-4">
+              <GlassPanel className="reveal-block w-full max-w-6xl p-3 sm:p-6 lg:p-8">
+                <div className="flex flex-col min-[56rem]:flex-row gap-5 min-[56rem]:gap-10">
+                  <aside className="min-[56rem]:w-56 shrink-0 flex flex-col gap-4">
                     <SectionHeading label="Каталог" title="Украшения и наборы" align="left" />
-                    <div className="flex lg:flex-col gap-2">
+                    <div className="flex min-[56rem]:flex-col gap-2">
                       {[
                         { key: 'decorations' as const, label: 'Украшения' },
                         { key: 'bundles' as const, label: 'Наборы' },
                       ].map((tab) => (
-                        <button key={tab.key} onClick={() => setCategory(tab.key)}
+                        <button key={tab.key} onClick={() => selectCategory(tab.key)}
                           aria-pressed={category === tab.key}
-                          className={`flex-1 lg:flex-none px-4 py-2.5 rounded-xl font-medium text-xs sm:text-sm text-center lg:text-left transition-all duration-300 ${
+                          className={`flex-1 min-[56rem]:flex-none px-4 py-2.5 rounded-xl font-medium text-xs sm:text-sm text-center min-[56rem]:text-left transition-all duration-300 ${
                             category === tab.key
                               ? 'bg-white text-[#070708]'
                               : 'bg-white/[0.04] text-white/50 hover:bg-white/[0.08] hover:text-white/80'
@@ -643,15 +763,15 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
                         </button>
                       ))}
                     </div>
-                    <div className="h-px bg-white/[0.06] hidden lg:block" />
-                    <div className="flex lg:flex-col gap-2">
+                    <div className="h-px bg-white/[0.06] hidden min-[56rem]:block" />
+                    <div className="flex min-[56rem]:flex-col gap-2">
                       {[
                         { key: 'no-nitro' as const, label: 'Без Nitro' },
                         { key: 'with-nitro' as const, label: 'С Nitro' },
                       ].map((tab) => (
-                        <button key={tab.key} onClick={() => setNitroFilter(tab.key)}
+                        <button key={tab.key} onClick={() => selectNitroFilter(tab.key)}
                           aria-pressed={nitroFilter === tab.key}
-                          className={`flex-1 lg:flex-none px-4 py-2 rounded-lg text-[11px] sm:text-xs font-medium tracking-wider text-center lg:text-left transition-all duration-300 ${
+                          className={`flex-1 min-[56rem]:flex-none px-4 py-2 rounded-lg text-[11px] sm:text-xs font-medium tracking-wider text-center min-[56rem]:text-left transition-all duration-300 ${
                             nitroFilter === tab.key
                               ? 'bg-white/10 text-white'
                               : 'text-white/30 hover:text-white/60'
@@ -702,9 +822,9 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
           <SlideFade active={slide === 2} delay={100} className="h-full w-full">
             <div className={SLIDE_BOX}>
               <div className="reveal-block w-full max-w-6xl">
-                <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-2 lg:gap-10 mb-6 lg:mb-10">
+                <div className="flex flex-col min-[56rem]:flex-row min-[56rem]:items-end min-[56rem]:justify-between gap-2 min-[56rem]:gap-10 mb-6 min-[56rem]:mb-10">
                   <SectionHeading label="Процесс" title="Как сделать заказ" align="left" />
-                  <p className="text-white/30 text-sm leading-relaxed max-w-sm hidden lg:block">
+                  <p className="text-white/30 text-sm leading-relaxed max-w-sm hidden min-[56rem]:block">
                     Шесть шагов от корзины до готового профиля. Обычно занимает 10–15 минут.
                   </p>
                 </div>
@@ -712,14 +832,14 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
                 {/* Две дорожки вместо одной колонки: заказ ровно посередине
                     переходит из ваших рук в наши, и раскладка показывает эту
                     границу до того, как прочитан хоть один шаг. */}
-                <div className="grid lg:grid-cols-[1fr_auto_1fr] gap-6 lg:gap-0">
+                <div className="grid min-[56rem]:grid-cols-[1fr_auto_1fr] gap-6 min-[56rem]:gap-0">
                   {processTracks.map((track, t) => (
                     <Fragment key={track.key}>
                       {t > 0 && (
-                        <div aria-hidden className="relative flex lg:flex-col items-center justify-center lg:mx-8">
-                          <span className="h-px w-full lg:h-full lg:w-px bg-gradient-to-r lg:bg-gradient-to-b from-transparent via-white/[0.08] to-transparent" />
+                        <div aria-hidden className="relative flex min-[56rem]:flex-col items-center justify-center min-[56rem]:mx-8">
+                          <span className="h-px w-full min-[56rem]:h-full min-[56rem]:w-px bg-gradient-to-r min-[56rem]:bg-gradient-to-b from-transparent via-white/[0.08] to-transparent" />
                           <span className="glass absolute w-8 h-8 rounded-full flex items-center justify-center text-white/30">
-                            <ArrowRightIcon className="w-3.5 h-3.5 rotate-90 lg:rotate-0" />
+                            <ArrowRightIcon className="w-3.5 h-3.5 rotate-90 min-[56rem]:rotate-0" />
                           </span>
                         </div>
                       )}
@@ -770,13 +890,13 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
         >
           <SlideFade active={slide === 3} delay={100} className="h-full w-full">
             <div key={`payment-${paymentSeq}`} className={SLIDE_BOX}>
-              <div className="reveal-block w-full max-w-5xl flex flex-col lg:flex-row items-center gap-8 lg:gap-14">
-                <div className="lg:w-1/2 flex flex-col items-center lg:items-start">
+              <div className="reveal-block w-full max-w-5xl flex flex-col min-[56rem]:flex-row items-center gap-8 min-[56rem]:gap-14">
+                <div className="min-[56rem]:w-1/2 flex flex-col items-center min-[56rem]:items-start">
                   <span className="glass rounded-full inline-flex items-center gap-1.5 text-[10px] tracking-[0.2em] uppercase text-white/30 px-4 py-1.5 mb-3">
                     <ShieldCheckIcon className="w-3 h-3" />
                     Безопасная оплата
                   </span>
-                  <div className="text-center lg:text-left">
+                  <div className="text-center min-[56rem]:text-left">
                     <SectionHeading title="Доступные способы" align="left" />
                   </div>
 
@@ -813,9 +933,9 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
                   </div>
                 </div>
 
-                <div aria-hidden className="hidden lg:block w-px self-stretch bg-gradient-to-b from-transparent via-white/[0.07] to-transparent" />
+                <div aria-hidden className="hidden min-[56rem]:block w-px self-stretch bg-gradient-to-b from-transparent via-white/[0.07] to-transparent" />
 
-                <div className="lg:w-1/2 w-full flex flex-col gap-3">
+                <div className="min-[56rem]:w-1/2 w-full flex flex-col gap-3">
                   {/* Счётчик берётся из самих данных, поэтому не может разойтись
                       со списком под ним. */}
                   <div className="flex items-center gap-3 animate-fade-in">
@@ -868,17 +988,17 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
         >
           <SlideFade active={slide === 4} delay={100} className="h-full w-full">
             <div className={SLIDE_BOX}>
-              <div className="reveal-block w-full max-w-5xl flex flex-col lg:flex-row gap-6 lg:gap-14">
-                <div className="lg:w-64 shrink-0 flex flex-col">
+              <div className="reveal-block w-full max-w-5xl flex flex-col md:flex-row gap-6 md:gap-8 lg:gap-14">
+                <div className="md:w-52 lg:w-64 shrink-0 flex flex-col">
                   <SectionHeading label="FAQ" title="Частые вопросы" align="left" />
-                  <p className="text-white/30 text-sm mt-3 leading-relaxed hidden lg:block">
+                  <p className="text-white/30 text-sm mt-3 leading-relaxed hidden md:block">
                     Ответы на то, что спрашивают чаще всего — до оформления заказа.
                   </p>
 
                   {/* Список отвечает на шесть вопросов и заканчивается; седьмой
                       задают в боте, поэтому выход туда стоит прямо здесь. */}
                   <a href={TELEGRAM_URL} target="_blank" rel="noopener noreferrer"
-                    className="glass rounded-2xl relative overflow-hidden group flex items-center gap-3 p-4 mt-6 lg:mt-auto animate-fade-in transition-[background-color] duration-500 hover:bg-white/[0.07]"
+                    className="glass rounded-2xl relative overflow-hidden group flex items-center gap-3 p-4 mt-6 md:mt-auto animate-fade-in transition-[background-color] duration-500 hover:bg-white/[0.07]"
                     style={{ animationDelay: '0.3s' }}>
                     <span aria-hidden className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-0 rounded-full bg-brand transition-all duration-500 ease-out group-hover:h-9" />
                     <div className="shrink-0 w-10 h-10 rounded-xl bg-white/[0.06] flex items-center justify-center transition-colors duration-500 group-hover:bg-brand/20">
@@ -919,11 +1039,11 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
         >
           <SlideFade active={slide === 5} delay={100} className="h-full w-full">
             <div className={SLIDE_BOX}>
-              <div className="reveal-block w-full max-w-5xl grid lg:grid-cols-2 gap-4">
+              <div className="reveal-block w-full max-w-5xl grid min-[56rem]:grid-cols-2 gap-4">
                 <GlassPanel className="p-6 sm:p-8 flex flex-col items-start">
                   <span className="glass rounded-full inline-block text-[10px] tracking-[0.25em] uppercase text-white/30 px-4 py-1.5 mb-3">Сообщество</span>
                   <h2 className="text-2xl sm:text-3xl font-bold">Присоединяйтесь к Discord</h2>
-                  <p className="text-white/40 text-sm sm:text-base mt-2 mb-6 leading-relaxed">
+                  <p className="text-white/65 text-sm sm:text-base mt-2 mb-6 leading-relaxed">
                     Общайтесь с другими пользователями, получайте новости и участвуйте в закрытых распродажах.
                   </p>
                   {/* mt-auto держит кнопки двух панелей на одной линии, даже
@@ -941,7 +1061,7 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
                 <GlassPanel className="p-6 sm:p-8 flex flex-col items-start">
                   <span className="glass rounded-full inline-block text-[10px] tracking-[0.25em] uppercase text-white/30 px-4 py-1.5 mb-3">Заказ</span>
                   <h2 className="text-2xl sm:text-3xl font-bold">Готовы начать?</h2>
-                  <p className="text-white/40 text-sm sm:text-base mt-2 mb-6 leading-relaxed">
+                  <p className="text-white/65 text-sm sm:text-base mt-2 mb-6 leading-relaxed">
                     Выберите украшение или набор в боте. Выдача — в течение 10–15 минут после оплаты.
                   </p>
                   <a href={TELEGRAM_URL} target="_blank" rel="noopener noreferrer"
@@ -952,7 +1072,7 @@ function App({ initialSlide = 0 }: { initialSlide?: number }) {
                   </a>
                 </GlassPanel>
 
-                <footer className="lg:col-span-2 glass rounded-2xl px-5 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-center sm:text-left">
+                <footer className="min-[56rem]:col-span-2 glass rounded-2xl px-5 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-center sm:text-left">
                   <div>
                     <p className="text-white/60 text-xs sm:text-sm font-medium">ИП Бережной Егор Станиславович</p>
                     <p className="text-white/30 text-[10px] sm:text-xs mt-0.5">ИНН 910824288444 &nbsp;|&nbsp; ОГРНИП 325911200146721</p>

@@ -22,8 +22,10 @@ export function FaqItem({ q, a, open, onToggle, delay = 0 }: { q: string; a: str
           </svg>
         </span>
       </button>
-      <div className={`overflow-hidden transition-all duration-300 ${open ? 'max-h-60 pb-4 sm:pb-5' : 'max-h-0'}`}>
-        <p className="text-white/50 text-sm sm:text-base leading-relaxed border-t border-white/[0.06] pt-3.5">{a}</p>
+      <div className={`faq-answer ${open ? 'is-open' : ''}`}>
+        <div>
+          <p className="text-white/50 text-sm sm:text-base leading-relaxed border-t border-white/[0.06] pt-3.5 pb-4 sm:pb-5">{a}</p>
+        </div>
       </div>
     </div>
   )
